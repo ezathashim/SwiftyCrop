@@ -16,7 +16,6 @@ struct ContentView: View {
   @State private var cropImageCircular: Bool
   @State private var rotateImage: Bool
   @State private var rotateImageWithButtons: Bool
-  @State private var usesLiquidGlassDesign: Bool
   @State private var maxMagnificationScale: CGFloat
   @State private var maskRadius: CGFloat
   @State private var zoomSensitivity: CGFloat
@@ -45,7 +44,6 @@ struct ContentView: View {
     _cropImageCircular = State(initialValue: defaultConfiguration.cropImageCircular)
     _rotateImage = State(initialValue: defaultConfiguration.rotateImage)
     _rotateImageWithButtons = State(initialValue: defaultConfiguration.rotateImageWithButtons)
-    _usesLiquidGlassDesign = State(initialValue: defaultConfiguration.usesLiquidGlassDesign)
     _maxMagnificationScale = State(initialValue: defaultConfiguration.maxMagnificationScale)
     _maskRadius = State(initialValue: defaultConfiguration.maskRadius)
     _zoomSensitivity = State(initialValue: defaultConfiguration.zoomSensitivity)
@@ -136,10 +134,6 @@ struct ContentView: View {
           Toggle("Rotate image (gestures)", isOn: $rotateImage)
           
           Toggle("Rotate image (buttons)", isOn: $rotateImageWithButtons)
-          
-          if #available(iOS 26, visionOS 26, macOS 26, *) {
-            Toggle("Liquid Glass design", isOn: $usesLiquidGlassDesign)
-          }
           
           HStack {
             Text("Max magnification")
