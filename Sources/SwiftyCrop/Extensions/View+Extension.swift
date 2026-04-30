@@ -5,6 +5,25 @@ struct SizePreferenceKey: PreferenceKey {
   static func reduce(value: inout CGSize, nextValue: () -> CGSize) { value = nextValue() }
 }
 
+@available(iOS 26, visionOS 26.0, macOS 26.0, *)
+struct ScrollOffsetToolbarTriggerModifier: ViewModifier {
+  @State private var scrollPosition = ScrollPosition(y: 20)
+  func body(content: Content) -> some View {
+    GeometryReader { geo in
+      ScrollView {
+        VStack(spacing: 0) {
+          Color.clear.frame(width: geo.size.width, height: 20)
+          content
+            .frame(width: geo.size.width, height: geo.size.height)
+        }
+      }
+      .scrollPosition($scrollPosition)
+      .scrollDisabled(true)
+      .scrollEdgeEffectStyle(.soft, for: .top)
+    }
+  }
+}
+
 extension View {
   @ViewBuilder
   func toolbarButtonLabelStyle() -> some View {
@@ -22,6 +41,20 @@ extension View {
         self.buttonStyle(GlassProminentButtonStyle())
       #else
         self.glassEffect(.regular.tint(Color.accentColor).interactive())
+      #endif
+    } else {
+      self
+    }
+  }
+
+  // Scroll offset toolbar trigger extension. Only applies to iOS 26+
+  @ViewBuilder
+  func scrollOffsetToolbarTrigger() -> some View {
+    if #available(iOS 26, visionOS 26.0, macOS 26.0, *) {
+      #if os(iOS)
+        self.modifier(ScrollOffsetToolbarTriggerModifier())
+      #else
+        self
       #endif
     } else {
       self
