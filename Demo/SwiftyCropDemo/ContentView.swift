@@ -23,6 +23,10 @@ struct ContentView: View {
   @State private var minAspectRatio: CGFloat
   @State private var maxAspectRatio: CGFloat
   @FocusState private var textFieldFocused: Bool
+  @EnvironmentObject private var cropSession: CropSession
+  #if os(macOS)
+    @Environment(\.openWindow) private var openWindow
+  #endif
   
   enum PresetAspectRatios: String, CaseIterable {
     case fourToThree = "4:3"
@@ -206,8 +210,17 @@ struct ContentView: View {
     }
     #if os(macOS)
     .frame(minWidth: 600, minHeight: 700)
-    .sheet(isPresented: $showImageCropper) {
-      imageCropperView
+    .onChange(of: showImageCropper) { isShowing in
+      guard isShowing, let image = selectedImage else { return }
+      cropSession.image = image
+      cropSession.maskShape = selectedShape
+      cropSession.configuration = makeCropConfiguration()
+      cropSession.onComplete = { croppedImage in
+        self.selectedImage = croppedImage
+      }
+      cropSession.onCancel = nil
+      openWindow(id: "crop-image")
+      showImageCropper = false
     }
     #else
     .fullScreenCover(isPresented: $showImageCropper) {
@@ -222,19 +235,7 @@ struct ContentView: View {
       SwiftyCropView(
         imageToCrop: selectedImage,
         maskShape: selectedShape,
-        configuration: SwiftyCropConfiguration(
-          maxMagnificationScale: maxMagnificationScale,
-          maskRadius: maskRadius,
-          cropImageCircular: cropImageCircular,
-          rotateImage: rotateImage,
-          rotateImageWithButtons: rotateImageWithButtons,
-          usesLiquidGlassDesign: usesLiquidGlassDesign,
-          zoomSensitivity: zoomSensitivity,
-          rectAspectRatio: rectAspectRatio.getValue(),
-          allowAspectRatioResizing: allowAspectRatioResizing,
-          minAspectRatio: minAspectRatio,
-          maxAspectRatio: maxAspectRatio
-        ),
+        configuration: makeCropConfiguration(),
         onCancel: {
           print("Operation cancelled")
         }
@@ -244,7 +245,31 @@ struct ContentView: View {
       }
     }
   }
-  
+
+  private func makeCropConfiguration() -> SwiftyCropConfiguration {
+    SwiftyCropConfiguration(
+      maxMagnificationScale: maxMagnificationScale,
+      maskRadius: maskRadius,
+      cropImageCircular: cropImageCircular,
+      rotateImage: rotateImage,
+      rotateImageWithButtons: rotateImageWithButtons,
+      zoomSensitivity: zoomSensitivity,
+      rectAspectRatio: rectAspectRatio.getValue(),
+      allowAspectRatioResizing: allowAspectRatioResizing,
+      minAspectRatio: minAspectRatio,
+      maxAspectRatio: maxAspectRatio,
+      colors: SwiftyCropConfiguration.Colors(
+        cancelButton: Color.primary,
+        interactionInstructions: Color.primary,
+        rotateButton: Color.primary,
+        resetRotationButton: Color.primary,
+        saveButton: Color.primary,
+        background: Color.primary,
+        cropHandle: Color.primary
+      )
+    )
+  }
+
   private func loadImage() {
     Task {
       selectedImage = await downloadExampleImage()
