@@ -4,7 +4,6 @@ import SwiftUI
 struct ProgressLayer: View {
   let configuration: SwiftyCropConfiguration
   let localizableTableName: String
-  @State private var showAlert = true
   
   var body: some View {
 #if compiler(>=6.2) // Use this to prevent compiling of unavailable iOS 26 APIs
