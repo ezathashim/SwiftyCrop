@@ -6,6 +6,28 @@ struct SizePreferenceKey: PreferenceKey {
 }
 
 extension View {
+  @ViewBuilder
+  func toolbarButtonLabelStyle() -> some View {
+    if #available(iOS 26, visionOS 26.0, macOS 26.0, *) {
+      self.labelStyle(.iconOnly)
+    } else {
+      self.labelStyle(.titleOnly)
+    }
+  }
+
+  @ViewBuilder
+  func tintedGlassEffect() -> some View {
+    if #available(iOS 26, visionOS 26.0, macOS 26.0, *) {
+      #if os(iOS)
+        self.buttonStyle(GlassProminentButtonStyle())
+      #else
+        self.glassEffect(.regular.tint(Color.accentColor).interactive())
+      #endif
+    } else {
+      self
+    }
+  }
+
   /// Calls `perform` whenever this view's size changes (including after first layout).
   /// Uses `PreferenceKey` so it's compatible with all supported OS versions.
   @ViewBuilder

@@ -61,85 +61,27 @@ struct CropView: View {
   @available(iOS 26, visionOS 26.0, macOS 26.0, *)
   private func buildLiquidGlassBody(configuration: SwiftyCropConfiguration) -> some View {
     ZStack {
-      VStack {
-        ToolbarView(
-          viewModel: viewModel,
-          configuration: configuration,
-          dismiss: {
-            onCancel?()
-            dismiss()
-          }
-        ) {
-          await MainActor.run {
-            isCropping = true
-          }
-          let result = cropImage()
-          await MainActor.run {
-            onComplete(result)
-            dismiss()
-            isCropping = false
-          }
-        }
-        .padding(.top, 60)
-        .padding(.horizontal, 20)
-        .zIndex(1)
-        
-        Spacer()
-        
-        cropImageView
-        
-        Spacer()
-      }
-      .background(configuration.colors.background)
+      cropImageView
       
       if isCropping {
         ProgressLayer(configuration: configuration, localizableTableName: localizableTableName)
       }
     }
+    .toolbar {
+      toolbarView
+    }
   }
   
   private func buildLegacyBody(configuration: SwiftyCropConfiguration) -> some View {
     ZStack {
-      VStack {
-        Legacy_InteractionInstructionsView(configuration: configuration, localizableTableName: localizableTableName)
-          .padding(.top, 50)
-          .zIndex(1)
-        
-        if configuration.rotateImageWithButtons {
-          Legacy_RotateButtonsView(viewModel: viewModel, configuration: configuration)
-            .zIndex(1)
-        }
-        
-        Spacer()
-        
-        cropImageView
-        
-        Spacer()
-        
-        Legacy_ButtonsView(
-          configuration: configuration,
-          localizableTableName: localizableTableName,
-          dismiss: {
-            onCancel?()
-            dismiss()
-          }
-        ) {
-          await MainActor.run {
-            isCropping = true
-          }
-          let result = cropImage()
-          await MainActor.run {
-            onComplete(result)
-            dismiss()
-            isCropping = false
-          }
-        }
-      }
-      .background(configuration.colors.background)
+      cropImageView
       
       if isCropping {
         ProgressLayer(configuration: configuration, localizableTableName: localizableTableName)
       }
+    }
+    .toolbar {
+      toolbarView
     }
   }
   
@@ -263,6 +205,97 @@ struct CropView: View {
     .simultaneousGesture(magnificationGesture)
     .simultaneousGesture(dragGesture)
     .simultaneousGesture(configuration.rotateImage ? rotationGesture : nil)
+  }
+
+  @ToolbarContentBuilder
+  private var toolbarView: some ToolbarContent {
+    ToolbarItem(placement: .cancellationAction) {
+      Button {
+        onCancel?()
+        dismiss()
+      } label: {
+        Label(
+          configuration.texts.cancelButton ??
+            NSLocalizedString("cancel_button", tableName: localizableTableName, bundle: .module, comment: ""),
+          systemImage: "xmark"
+        )
+        .toolbarButtonLabelStyle()
+        .font(configuration.fonts.cancelButton)
+        .foregroundStyle(configuration.colors.cancelButton)
+      }
+      .disabled(isCropping)
+    }
+    if configuration.rotateImageWithButtons {
+      ToolbarItemGroup(placement: .navigation) {
+        Button {
+          withAnimation {
+            viewModel.angle.degrees -= 90
+            viewModel.lastAngle = viewModel.angle
+          }
+        } label: {
+          Image(systemName: "rotate.left")
+            .foregroundStyle(configuration.colors.rotateButton)
+        }
+        Button {
+          let numberOfFullCircles = Int(viewModel.angle.degrees / 360)
+          let newValue = Double(numberOfFullCircles * 360)
+          withAnimation {
+            viewModel.angle = Angle(degrees: newValue)
+            viewModel.lastAngle = viewModel.angle
+          }
+        } label: {
+          Image(systemName: "arrow.uturn.backward.circle")
+            .foregroundStyle(configuration.colors.resetRotationButton)
+        }
+        .opacity(viewModel.angle.degrees.truncatingRemainder(dividingBy: 360) == 0 ? 0.3 : 1) // may need 0.7 opacity when disabled on iOS 26+
+        .disabled(viewModel.angle.degrees.truncatingRemainder(dividingBy: 360) == 0)
+        Button {
+          withAnimation {
+            viewModel.angle.degrees += 90
+            viewModel.lastAngle = viewModel.angle
+          }
+        } label: {
+          Image(systemName: "rotate.right")
+            .foregroundStyle(configuration.colors.rotateButton)
+        }
+      }
+    }
+    ToolbarItem(placement: .principal) {
+      Text(
+        configuration.texts.interactionInstructions ??
+          NSLocalizedString("interaction_instructions", tableName: localizableTableName, bundle: .module, comment: "")
+      )
+      .padding(.horizontal)
+      .font(configuration.fonts.interactionInstructions)
+      .foregroundStyle(configuration.colors.interactionInstructions)
+    }
+    if #available(iOS 26, visionOS 26.0, macOS 26.0, *) {
+      ToolbarSpacer(.fixed)
+    }
+    ToolbarItem(placement: .confirmationAction) {
+      Button {
+        Task {
+          await MainActor.run { isCropping = true }
+          let result = cropImage()
+          await MainActor.run {
+            onComplete(result)
+            dismiss()
+            isCropping = false
+          }
+        }
+      } label: {
+        Label(
+          configuration.texts.saveButton ??
+            NSLocalizedString("save_button", tableName: localizableTableName, bundle: .module, comment: ""),
+          systemImage: "checkmark"
+        )
+        .toolbarButtonLabelStyle()
+        .font(configuration.fonts.saveButton)
+        .foregroundStyle(configuration.colors.saveButton)
+      }
+      .disabled(isCropping)
+      .tintedGlassEffect()
+    }
   }
 
   private var maskHandlesOverlay: some View {
