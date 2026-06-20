@@ -191,16 +191,6 @@
         }
       }
     },
-    "iOS 26 is not supported. Adjust the simulator or your Xcode version." : {
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iOS 26 ei ole tuettu. Säädä simulaattoria tai Xcode versiotasi."
-          }
-        }
-      }
-    },
     "processing_label" : {
       "extractionState" : "manual",
       "localizations" : {

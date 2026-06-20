@@ -138,7 +138,7 @@ struct CropView: View {
       .background(configuration.colors.background)
       
       if isCropping {
-        Legacy_ProgressLayer(configuration: configuration, localizableTableName: localizableTableName)
+        ProgressLayer(configuration: configuration, localizableTableName: localizableTableName)
       }
     }
   }
