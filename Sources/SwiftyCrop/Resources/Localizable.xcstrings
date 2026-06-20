@@ -102,43 +102,43 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bewegen und skalieren"
+            "value" : "Bewegen und Skalieren"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Move and scale"
+            "value" : "Move and Scale"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mover y escalar"
+            "value" : "Mover y Escalar"
           }
         },
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Siirrä ja skaalaa"
+            "value" : "Siirrä ja Skaalaa"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Déplacer et dimensionner"
+            "value" : "Déplacer et Dimensionner"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mozgatás és méretezés"
+            "value" : "Mozgatás és Méretezés"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Muoversi e scalare"
+            "value" : "Muoversi e Scalare"
           }
         },
         "ja" : {
@@ -156,25 +156,25 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mover e dimensionar"
+            "value" : "Mover e Dimensionar"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Перемещение и масштабирование"
+            "value" : "Перемещение и Масштабирование"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Taşıyın ve ölçeklendirin"
+            "value" : "Taşıyın ve Ölçeklendirin"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Переміщення та масштабування"
+            "value" : "Переміщення та Масштабування"
           }
         },
         "zh" : {
