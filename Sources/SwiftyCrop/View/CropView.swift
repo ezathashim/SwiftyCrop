@@ -202,39 +202,11 @@ struct CropView: View {
       .disabled(isCropping)
     }
     if configuration.rotateImageWithButtons {
-      ToolbarItemGroup(placement: .navigation) {
-        Button {
-          withAnimation {
-            viewModel.angle.degrees -= 90
-            viewModel.lastAngle = viewModel.angle
-          }
-        } label: {
-          Image(systemName: "rotate.left")
-            .foregroundStyle(configuration.colors.rotateButton)
-        }
-        Button {
-          let numberOfFullCircles = Int(viewModel.angle.degrees / 360)
-          let newValue = Double(numberOfFullCircles * 360)
-          withAnimation {
-            viewModel.angle = Angle(degrees: newValue)
-            viewModel.lastAngle = viewModel.angle
-          }
-        } label: {
-          Image(systemName: "arrow.uturn.backward.circle")
-            .foregroundStyle(configuration.colors.resetRotationButton)
-        }
-        .opacity(viewModel.angle.degrees.truncatingRemainder(dividingBy: 360) == 0 ? 0.3 : 1) // may need 0.7 opacity when disabled on iOS 26+
-        .disabled(viewModel.angle.degrees.truncatingRemainder(dividingBy: 360) == 0)
-        Button {
-          withAnimation {
-            viewModel.angle.degrees += 90
-            viewModel.lastAngle = viewModel.angle
-          }
-        } label: {
-          Image(systemName: "rotate.right")
-            .foregroundStyle(configuration.colors.rotateButton)
-        }
-      }
+      RotationControlsView(
+        angle: $viewModel.angle,
+        lastAngle: $viewModel.lastAngle,
+        configuration: configuration
+      )
     }
     ToolbarItem(placement: .principal) {
       Text(
@@ -392,6 +364,94 @@ struct CropView: View {
       }
     }
   }
+}
+
+// MARK: - Rotation Controls View
+struct RotationControlsView: ToolbarContent {
+  @Binding var angle: Angle
+  @Binding var lastAngle: Angle
+  let configuration: SwiftyCropConfiguration
+
+  @State private var showRotationPopover: Bool = false
+
+  var body: some ToolbarContent {
+    #if os(iOS) || os(visionOS)
+    ToolbarItem(placement: .navigation) {
+      if #available(iOS 16.4, visionOS 1.0, *) {
+        Button {
+          showRotationPopover = true
+        } label: {
+          Image(systemName: "ellipsis.circle")
+            .foregroundStyle(configuration.colors.rotateButton)
+        }
+        .popover(isPresented: $showRotationPopover) {
+          HStack(spacing: 12) {
+            rotationButtons(onDismiss: { showRotationPopover = false })
+            .labelStyle(.iconOnly)
+          }
+          .padding()
+          .presentationCompactAdaptation(.popover)
+        }
+      } else {
+        Menu {
+          rotationButtons()
+        } label: {
+          Image(systemName: "ellipsis.circle")
+        }
+        .foregroundStyle(configuration.colors.rotateButton)
+      }
+
+    }
+    #else
+      ToolbarItemGroup(placement: .navigation) {
+        rotationButtons()
+        .labelStyle(.iconOnly)
+      }
+    #endif
+  }
+
+  @ViewBuilder
+  private func rotationButtons(onDismiss: (() -> Void)? = nil) -> some View {
+    Button {
+      withAnimation {
+        angle.degrees -= 90
+        lastAngle = angle
+      }
+    } label: {
+      Label("Rotate Left", systemImage: "rotate.left")
+    }
+    .foregroundStyle(configuration.colors.rotateButton)
+
+    Button {
+      let numberOfFullCircles = Int(angle.degrees / 360)
+      let newValue = Double(numberOfFullCircles * 360)
+      withAnimation {
+        angle = Angle(degrees: newValue)
+        lastAngle = angle
+      }
+      onDismiss?()
+    } label: {
+      Label("Reset Rotation", systemImage: "arrow.uturn.backward.circle")
+    }
+    .foregroundStyle(configuration.colors.resetRotationButton)
+    .opacity(isResetDisabled ? 0.3 : 1)
+    .disabled(isResetDisabled)
+
+    Button {
+      withAnimation {
+        angle.degrees += 90
+        lastAngle = angle
+      }
+    } label: {
+      Label("Rotate Right", systemImage: "rotate.right")
+    }
+    .foregroundStyle(configuration.colors.rotateButton)
+  }
+
+  private var isResetDisabled: Bool {
+    angle.degrees.truncatingRemainder(dividingBy: 360) == 0
+  }
+
 }
 
 // MARK: - Platform Image View
