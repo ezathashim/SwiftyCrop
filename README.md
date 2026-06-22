@@ -248,7 +248,7 @@ let configuration = SwiftyCropConfiguration(
 
 ## 🪟 iOS 26 & Liquid Glass
 
-To adopt to the new Liquid Glass design Apple introduced with iOS 26, SwiftyCrop supplies a new UI which reflects this design. This will remove text buttons and replace them with icon buttons and much more. Below is the current way it looks. By default, this is active if iOS 26 or macOS 26 is available. You can change this by overriding the `SwiftyCropConfiguration`.
+To adopt the new Liquid Glass design Apple introduced with iOS 26, SwiftyCrop renders a UI that reflects this design. This replaces text buttons with icon buttons and much more. It is applied automatically whenever iOS 26, visionOS 26 or macOS 26 is available; older OS versions fall back to the classic UI. There is no toggle for it. Below is the current way it looks.
 
 <p align="center">
     <img src="Assets/liquid_glass.png" style="margin: auto; width: 250px"/>

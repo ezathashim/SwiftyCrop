@@ -18,7 +18,7 @@ public struct SwiftyCropConfiguration {
   public let colors: Colors
   
   /// Creates a new instance of `Texts` that are used in the cropping view.
-  /// - Note: The new LiquidGlass design does not use texts anymore but icon buttons. Setting this when Liquid Glass is enabled will not have any effect.
+  /// - Note: On iOS/visionOS/macOS 26+ the Liquid Glass design uses icon buttons instead of text, so button texts set here have no effect there.
   ///
   /// - Parameters:
   ///   - cancelButton: The text for the cancel button. Defaults to `nil`, using localized values from the app.
@@ -46,7 +46,7 @@ public struct SwiftyCropConfiguration {
   }
   
   /// Creates a new instance of `Fonts` that are used in the cropping view texts.
-  /// - Note: The new LiquidGlass design does not use texts anymore but icon buttons. Setting this when Liquid Glass is enabled will not have any effect.
+  /// - Note: On iOS/visionOS/macOS 26+ the Liquid Glass design uses icon buttons instead of text, so button fonts set here have no effect there.
   ///
   /// - Parameters:
   ///   - cancelButton: The font for the cancel button text. Defaults to `nil`, using default values.
