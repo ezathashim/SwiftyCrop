@@ -286,6 +286,8 @@ Thanks to [@navanchauhan](https://github.com/navanchauhan) for adding native mac
 
 Thanks to [@andrewhanshaw](https://github.com/andrewhanshaw) for adding the aspect ratio resizing functionality 🎉
 
+Another thanks to [@andrewhanshaw](https://github.com/andrewhanshaw) for overhauling the cropping UI with a native SwiftUI toolbar, native macOS window support and a unified Liquid Glass design 🛠️
+
 ## 📃 License
 
 `SwiftyCrop` is available under the MIT license. See the [LICENSE](https://github.com/benedom/SwiftyCrop/blob/master/LICENSE.md) file for more info.
