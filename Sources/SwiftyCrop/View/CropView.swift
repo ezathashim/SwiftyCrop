@@ -217,9 +217,11 @@ struct CropView: View {
       .font(configuration.fonts.interactionInstructions)
       .foregroundStyle(configuration.colors.interactionInstructions)
     }
-    if #available(iOS 26, visionOS 26.0, macOS 26.0, *) {
+    #if !os(visionOS)
+    if #available(iOS 26, macOS 26, *) {
       ToolbarSpacer(.fixed)
     }
+    #endif
     ToolbarItem(placement: .confirmationAction) {
       Button {
         Task {

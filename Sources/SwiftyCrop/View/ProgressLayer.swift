@@ -18,6 +18,9 @@ struct ProgressLayer: View {
 
   @ViewBuilder
   private var progressCard: some View {
+    #if os(visionOS)
+    fallbackCard
+    #else
     if #available(iOS 26, macOS 26, *) {
       progressContent
         .glassEffect(
@@ -25,11 +28,16 @@ struct ProgressLayer: View {
           in: RoundedRectangle(cornerRadius: 12)
         )
     } else {
-      progressContent
-        .frame(width: 120, height: 110)
-        .background(configuration.colors.background.opacity(0.8))
-        .cornerRadius(12)
+      fallbackCard
     }
+    #endif
+  }
+
+  private var fallbackCard: some View {
+    progressContent
+      .frame(width: 120, height: 110)
+      .background(configuration.colors.background.opacity(0.8))
+      .cornerRadius(12)
   }
 
   private var progressContent: some View {

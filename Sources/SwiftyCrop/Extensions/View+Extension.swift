@@ -5,7 +5,8 @@ struct SizePreferenceKey: PreferenceKey {
   static func reduce(value: inout CGSize, nextValue: () -> CGSize) { value = nextValue() }
 }
 
-@available(iOS 26, visionOS 26.0, macOS 26.0, *)
+#if os(iOS)
+@available(iOS 26, *)
 struct ScrollOffsetToolbarTriggerModifier: ViewModifier {
   @State private var scrollPosition = ScrollPosition(y: 20)
   func body(content: Content) -> some View {
@@ -23,6 +24,7 @@ struct ScrollOffsetToolbarTriggerModifier: ViewModifier {
     }
   }
 }
+#endif
 
 extension View {
   @ViewBuilder
@@ -39,8 +41,10 @@ extension View {
     if #available(iOS 26, visionOS 26.0, macOS 26.0, *) {
       #if os(iOS)
         self.buttonStyle(GlassProminentButtonStyle())
-      #else
+      #elseif os(macOS)
         self.glassEffect(.regular.tint(Color.accentColor).interactive())
+      #else
+        self
       #endif
     } else {
       self

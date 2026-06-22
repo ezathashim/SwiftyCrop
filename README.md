@@ -62,11 +62,18 @@ The localization file can be found in `Sources/SwiftyCrop/Resources`.
 
 ## 🧳 Requirements
 
+Deployment targets (where your app can run):
+
 - iOS 16.0 or later
 - visionOS 1.0 or later
 - macOS 13.0 or later
-- Xcode 15.0 or later
+
+Build requirements (the toolchain you compile with):
+
+- Xcode 26.0 or later
 - Swift 5.9 or later
+
+> SwiftyCrop must be built with Xcode 26+ because it references iOS/macOS 26 SDK APIs (e.g. Liquid Glass effects). It still *deploys* to the OS versions listed above — older OS versions fall back to the non-glass UI at runtime.
 
 
 ## 💻 Installation
@@ -78,7 +85,7 @@ There are two ways to use SwiftyCrop in your project:
 
 The [Swift Package Manager](https://swift.org/package-manager/) is a tool for managing the distribution of Swift code. It’s integrated with the Swift build system to automate the process of downloading, compiling, and linking dependencies.
 
-To integrate `SwiftyCrop` into your Xcode project using Xcode 15.0 or later, specify it in `File > Swift Packages > Add Package Dependency...`:
+To integrate `SwiftyCrop` into your Xcode project using Xcode 26.0 or later, specify it in `File > Swift Packages > Add Package Dependency...`:
 
 ```ogdl
 https://github.com/benedom/SwiftyCrop
