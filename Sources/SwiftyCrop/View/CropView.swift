@@ -46,100 +46,18 @@ struct CropView: View {
   
   // MARK: - Body
   var body: some View {
-#if compiler(>=6.2) // Use this to prevent compiling of unavailable iOS 26 / macOS 26 APIs
-    if configuration.usesLiquidGlassDesign,
-       #available(iOS 26, visionOS 26.0, macOS 26.0, *) {
-      buildLiquidGlassBody(configuration: configuration)
-    } else {
-      buildLegacyBody(configuration: configuration)
-    }
-#else
-    buildLegacyBody(configuration: configuration)
-#endif
-  }
-
-  @available(iOS 26, visionOS 26.0, macOS 26.0, *)
-  private func buildLiquidGlassBody(configuration: SwiftyCropConfiguration) -> some View {
     ZStack {
-      VStack {
-        ToolbarView(
-          viewModel: viewModel,
-          configuration: configuration,
-          dismiss: {
-            onCancel?()
-            dismiss()
-          }
-        ) {
-          await MainActor.run {
-            isCropping = true
-          }
-          let result = cropImage()
-          await MainActor.run {
-            onComplete(result)
-            dismiss()
-            isCropping = false
-          }
-        }
-        .padding(.top, 60)
-        .padding(.horizontal, 20)
-        .zIndex(1)
-        
-        Spacer()
-        
-        cropImageView
-        
-        Spacer()
-      }
-      .background(configuration.colors.background)
+      cropImageView
       
       if isCropping {
         ProgressLayer(configuration: configuration, localizableTableName: localizableTableName)
       }
     }
-  }
-  
-  private func buildLegacyBody(configuration: SwiftyCropConfiguration) -> some View {
-    ZStack {
-      VStack {
-        Legacy_InteractionInstructionsView(configuration: configuration, localizableTableName: localizableTableName)
-          .padding(.top, 50)
-          .zIndex(1)
-        
-        if configuration.rotateImageWithButtons {
-          Legacy_RotateButtonsView(viewModel: viewModel, configuration: configuration)
-            .zIndex(1)
-        }
-        
-        Spacer()
-        
-        cropImageView
-        
-        Spacer()
-        
-        Legacy_ButtonsView(
-          configuration: configuration,
-          localizableTableName: localizableTableName,
-          dismiss: {
-            onCancel?()
-            dismiss()
-          }
-        ) {
-          await MainActor.run {
-            isCropping = true
-          }
-          let result = cropImage()
-          await MainActor.run {
-            onComplete(result)
-            dismiss()
-            isCropping = false
-          }
-        }
-      }
-      .background(configuration.colors.background)
-      
-      if isCropping {
-        Legacy_ProgressLayer(configuration: configuration, localizableTableName: localizableTableName)
-      }
+    // Scrolls the view up slightly so the blurred background of the toolbar is shown on a non-scrolling view
+    // Helps with contrast between the toolbar title and the content behind it
+    .scrollOffsetToolbarTrigger()
+    .toolbar {
+      toolbarView
     }
   }
   
@@ -265,6 +183,71 @@ struct CropView: View {
     .simultaneousGesture(configuration.rotateImage ? rotationGesture : nil)
   }
 
+  @ToolbarContentBuilder
+  private var toolbarView: some ToolbarContent {
+    ToolbarItem(placement: .cancellationAction) {
+      Button {
+        onCancel?()
+        dismiss()
+      } label: {
+        Label(
+          configuration.texts.cancelButton ??
+            NSLocalizedString("cancel_button", tableName: localizableTableName, bundle: .module, comment: ""),
+          systemImage: "xmark"
+        )
+        .toolbarButtonLabelStyle()
+        .font(configuration.fonts.cancelButton)
+        .foregroundStyle(configuration.colors.cancelButton)
+      }
+      .disabled(isCropping)
+    }
+    if configuration.rotateImageWithButtons {
+      RotationControlsView(
+        angle: $viewModel.angle,
+        lastAngle: $viewModel.lastAngle,
+        configuration: configuration
+      )
+    }
+    ToolbarItem(placement: .principal) {
+      Text(
+        configuration.texts.interactionInstructions ??
+          NSLocalizedString("interaction_instructions", tableName: localizableTableName, bundle: .module, comment: "")
+      )
+      .padding(.horizontal)
+      .font(configuration.fonts.interactionInstructions)
+      .foregroundStyle(configuration.colors.interactionInstructions)
+    }
+    #if !os(visionOS)
+    if #available(iOS 26, macOS 26, *) {
+      ToolbarSpacer(.fixed)
+    }
+    #endif
+    ToolbarItem(placement: .confirmationAction) {
+      Button {
+        Task {
+          await MainActor.run { isCropping = true }
+          let result = cropImage()
+          await MainActor.run {
+            onComplete(result)
+            dismiss()
+            isCropping = false
+          }
+        }
+      } label: {
+        Label(
+          configuration.texts.saveButton ??
+            NSLocalizedString("save_button", tableName: localizableTableName, bundle: .module, comment: ""),
+          systemImage: "checkmark"
+        )
+        .toolbarButtonLabelStyle()
+        .font(configuration.fonts.saveButton)
+        .foregroundStyle(configuration.colors.saveButton)
+      }
+      .disabled(isCropping)
+      .tintedGlassEffect()
+    }
+  }
+
   private var maskHandlesOverlay: some View {
     Group {
       ZStack {
@@ -383,6 +366,94 @@ struct CropView: View {
       }
     }
   }
+}
+
+// MARK: - Rotation Controls View
+struct RotationControlsView: ToolbarContent {
+  @Binding var angle: Angle
+  @Binding var lastAngle: Angle
+  let configuration: SwiftyCropConfiguration
+
+  @State private var showRotationPopover: Bool = false
+
+  var body: some ToolbarContent {
+    #if os(iOS) || os(visionOS)
+    ToolbarItem(placement: .navigation) {
+      if #available(iOS 16.4, visionOS 1.0, *) {
+        Button {
+          showRotationPopover = true
+        } label: {
+          Image(systemName: "ellipsis.circle")
+            .foregroundStyle(configuration.colors.rotateButton)
+        }
+        .popover(isPresented: $showRotationPopover) {
+          HStack(spacing: 12) {
+            rotationButtons(onDismiss: { showRotationPopover = false })
+            .labelStyle(.iconOnly)
+          }
+          .padding()
+          .presentationCompactAdaptation(.popover)
+        }
+      } else {
+        Menu {
+          rotationButtons()
+        } label: {
+          Image(systemName: "ellipsis.circle")
+        }
+        .foregroundStyle(configuration.colors.rotateButton)
+      }
+
+    }
+    #else
+      ToolbarItemGroup(placement: .navigation) {
+        rotationButtons()
+        .labelStyle(.iconOnly)
+      }
+    #endif
+  }
+
+  @ViewBuilder
+  private func rotationButtons(onDismiss: (() -> Void)? = nil) -> some View {
+    Button {
+      withAnimation {
+        angle.degrees -= 90
+        lastAngle = angle
+      }
+    } label: {
+      Label("Rotate Left", systemImage: "rotate.left")
+    }
+    .foregroundStyle(configuration.colors.rotateButton)
+
+    Button {
+      let numberOfFullCircles = Int(angle.degrees / 360)
+      let newValue = Double(numberOfFullCircles * 360)
+      withAnimation {
+        angle = Angle(degrees: newValue)
+        lastAngle = angle
+      }
+      onDismiss?()
+    } label: {
+      Label("Reset Rotation", systemImage: "arrow.uturn.backward.circle")
+    }
+    .foregroundStyle(configuration.colors.resetRotationButton)
+    .opacity(isResetDisabled ? 0.3 : 1)
+    .disabled(isResetDisabled)
+
+    Button {
+      withAnimation {
+        angle.degrees += 90
+        lastAngle = angle
+      }
+    } label: {
+      Label("Rotate Right", systemImage: "rotate.right")
+    }
+    .foregroundStyle(configuration.colors.rotateButton)
+  }
+
+  private var isResetDisabled: Bool {
+    angle.degrees.truncatingRemainder(dividingBy: 360) == 0
+  }
+
 }
 
 // MARK: - Platform Image View

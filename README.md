@@ -17,9 +17,9 @@
 
 <div align="center">
 
-| Circle Mask Shape | Square Mask Shape | Liquid Glass UI |
-|:-----------------:|:-----------------:|:---------------:|
-| <img src="Assets/crop_circle.png" width="200px"/> | <img src="Assets/crop_square.png" width="200px"/> | <img src="Assets/liquid_glass.png" width="200px"/> |
+| Circle Mask Shape | Square Mask Shape |
+|:-----------------:|:-----------------:|
+| <img src="Assets/circle_crop.png" width="200px"/> | <img src="Assets/square_crop.png" width="200px"/> |
 
 </div>
 
@@ -62,11 +62,18 @@ The localization file can be found in `Sources/SwiftyCrop/Resources`.
 
 ## 🧳 Requirements
 
+Deployment targets (where your app can run):
+
 - iOS 16.0 or later
 - visionOS 1.0 or later
 - macOS 13.0 or later
-- Xcode 15.0 or later
+
+Build requirements (the toolchain you compile with):
+
+- Xcode 26.0 or later
 - Swift 5.9 or later
+
+> SwiftyCrop must be built with Xcode 26+ because it references iOS/macOS 26 SDK APIs (e.g. Liquid Glass effects). It still *deploys* to the OS versions listed above — older OS versions fall back to the non-glass UI at runtime.
 
 
 ## 💻 Installation
@@ -78,7 +85,7 @@ There are two ways to use SwiftyCrop in your project:
 
 The [Swift Package Manager](https://swift.org/package-manager/) is a tool for managing the distribution of Swift code. It’s integrated with the Swift build system to automate the process of downloading, compiling, and linking dependencies.
 
-To integrate `SwiftyCrop` into your Xcode project using Xcode 15.0 or later, specify it in `File > Swift Packages > Add Package Dependency...`:
+To integrate `SwiftyCrop` into your Xcode project using Xcode 26.0 or later, specify it in `File > Swift Packages > Add Package Dependency...`:
 
 ```ogdl
 https://github.com/benedom/SwiftyCrop
@@ -169,7 +176,6 @@ You can also configure `SwiftyCropView` by passing a `SwiftyCropConfiguration`. 
 | `cropImageCircular` | `Bool`: When using the cropping mask `circle`, whether the resulting image should also be masked as circle. Defaults to `false`. |
 | `rotateImage` | `Bool`: Whether the image can be rotated when cropping using pinch gestures. Defaults to `false`. |
 | `rotateImageWithButtons` | `Bool`: Option to show rotation buttons for rotating. Defaults to `false`. |
-| `usesLiquidGlassDesign` | `Bool?`: Apply the all new liquid glass design. Defaults to `true` if iOS 26 is available. |
 | `zoomSensitivity` | `CGFloat`: Zoom sensitivity when cropping. Increase to make zoom faster / less sensitive. Defaults to `1.0`. |
 | `rectAspectRatio` | `CGFloat`: The aspect ratio to use when a rectangular mask shape is used. Defaults to `4:3`. |
 | `allowAspectRatioResizing` | `Bool`: When using the `rectangle` mask shape, whether the user can freely resize the aspect ratio by dragging the edge handles. Defaults to `false`. |
@@ -187,7 +193,6 @@ let configuration = SwiftyCropConfiguration(
     cropImageCircular: false,
     rotateImage: false,
     rotateImageWithButtons: false,
-    usesLiquidGlassDesign: false,
     zoomSensitivity: 1.0,
     rectAspectRatio: 4/3,
     texts: SwiftyCropConfiguration.Texts(
@@ -238,15 +243,15 @@ let configuration = SwiftyCropConfiguration(
 ```
 
 <p align="center">
-    <img src="Assets/aspect_ratio_resizing.png" style="margin: auto; width: 250px"/>
+    <img src="Assets/aspect_crop.png" style="margin: auto; width: 250px"/>
 </p>
 
 ## 🪟 iOS 26 & Liquid Glass
 
-To adopt to the new Liquid Glass design Apple introduced with iOS 26, SwiftyCrop supplies a new UI which reflects this design. This will remove text buttons and replace them with icon buttons and much more. Below is the current way it looks. By default, this is active if iOS 26 or macOS 26 is available. You can change this by overriding the `SwiftyCropConfiguration`.
+To adopt the new Liquid Glass design Apple introduced with iOS 26, SwiftyCrop renders a UI that reflects this design (the screenshots above). This replaces text buttons with icon buttons and much more. It is applied automatically whenever iOS 26, visionOS 26 or macOS 26 is available; older OS versions fall back to the classic UI shown below. There is no toggle for it.
 
 <p align="center">
-    <img src="Assets/liquid_glass.png" style="margin: auto; width: 250px"/>
+    <img src="Assets/legacy_square.png" style="margin: auto; width: 250px"/>
 </p>
 
 ## 👨‍💻 Contributors
@@ -280,6 +285,8 @@ Thanks to [@puyanlin](https://github.com/puyanlin) for adding the traditional ch
 Thanks to [@navanchauhan](https://github.com/navanchauhan) for adding native macOS support 🖥️
 
 Thanks to [@andrewhanshaw](https://github.com/andrewhanshaw) for adding the aspect ratio resizing functionality 🎉
+
+Another thanks to [@andrewhanshaw](https://github.com/andrewhanshaw) for overhauling the cropping UI with a native SwiftUI toolbar, native macOS window support and a unified Liquid Glass design 🛠️
 
 ## 📃 License
 

@@ -16,7 +16,6 @@ struct ContentView: View {
   @State private var cropImageCircular: Bool
   @State private var rotateImage: Bool
   @State private var rotateImageWithButtons: Bool
-  @State private var usesLiquidGlassDesign: Bool
   @State private var maxMagnificationScale: CGFloat
   @State private var maskRadius: CGFloat
   @State private var zoomSensitivity: CGFloat
@@ -24,6 +23,10 @@ struct ContentView: View {
   @State private var minAspectRatio: CGFloat
   @State private var maxAspectRatio: CGFloat
   @FocusState private var textFieldFocused: Bool
+  @EnvironmentObject private var cropSession: CropSession
+  #if os(macOS)
+    @Environment(\.openWindow) private var openWindow
+  #endif
   
   enum PresetAspectRatios: String, CaseIterable {
     case fourToThree = "4:3"
@@ -45,7 +48,6 @@ struct ContentView: View {
     _cropImageCircular = State(initialValue: defaultConfiguration.cropImageCircular)
     _rotateImage = State(initialValue: defaultConfiguration.rotateImage)
     _rotateImageWithButtons = State(initialValue: defaultConfiguration.rotateImageWithButtons)
-    _usesLiquidGlassDesign = State(initialValue: defaultConfiguration.usesLiquidGlassDesign)
     _maxMagnificationScale = State(initialValue: defaultConfiguration.maxMagnificationScale)
     _maskRadius = State(initialValue: defaultConfiguration.maskRadius)
     _zoomSensitivity = State(initialValue: defaultConfiguration.zoomSensitivity)
@@ -137,10 +139,6 @@ struct ContentView: View {
           
           Toggle("Rotate image (buttons)", isOn: $rotateImageWithButtons)
           
-          if #available(iOS 26, visionOS 26, macOS 26, *) {
-            Toggle("Liquid Glass design", isOn: $usesLiquidGlassDesign)
-          }
-          
           HStack {
             Text("Max magnification")
               .frame(maxWidth: .infinity, alignment: .leading)
@@ -212,8 +210,17 @@ struct ContentView: View {
     }
     #if os(macOS)
     .frame(minWidth: 600, minHeight: 700)
-    .sheet(isPresented: $showImageCropper) {
-      imageCropperView
+    .onChange(of: showImageCropper) { isShowing in
+      guard isShowing, let image = selectedImage else { return }
+      cropSession.image = image
+      cropSession.maskShape = selectedShape
+      cropSession.configuration = makeCropConfiguration()
+      cropSession.onComplete = { croppedImage in
+        self.selectedImage = croppedImage
+      }
+      cropSession.onCancel = nil
+      openWindow(id: "crop-image")
+      showImageCropper = false
     }
     #else
     .fullScreenCover(isPresented: $showImageCropper) {
@@ -228,19 +235,7 @@ struct ContentView: View {
       SwiftyCropView(
         imageToCrop: selectedImage,
         maskShape: selectedShape,
-        configuration: SwiftyCropConfiguration(
-          maxMagnificationScale: maxMagnificationScale,
-          maskRadius: maskRadius,
-          cropImageCircular: cropImageCircular,
-          rotateImage: rotateImage,
-          rotateImageWithButtons: rotateImageWithButtons,
-          usesLiquidGlassDesign: usesLiquidGlassDesign,
-          zoomSensitivity: zoomSensitivity,
-          rectAspectRatio: rectAspectRatio.getValue(),
-          allowAspectRatioResizing: allowAspectRatioResizing,
-          minAspectRatio: minAspectRatio,
-          maxAspectRatio: maxAspectRatio
-        ),
+        configuration: makeCropConfiguration(),
         onCancel: {
           print("Operation cancelled")
         }
@@ -248,15 +243,33 @@ struct ContentView: View {
         // Do something with the returned, cropped image
         self.selectedImage = croppedImage
       }
-      .clipped(antialiased: false)
-      #if os(macOS)
-      .frame(width: 600, height: 600)
-      #else
-      .ignoresSafeArea(edges: .all)
-      #endif
     }
   }
-  
+
+  private func makeCropConfiguration() -> SwiftyCropConfiguration {
+    SwiftyCropConfiguration(
+      maxMagnificationScale: maxMagnificationScale,
+      maskRadius: maskRadius,
+      cropImageCircular: cropImageCircular,
+      rotateImage: rotateImage,
+      rotateImageWithButtons: rotateImageWithButtons,
+      zoomSensitivity: zoomSensitivity,
+      rectAspectRatio: rectAspectRatio.getValue(),
+      allowAspectRatioResizing: allowAspectRatioResizing,
+      minAspectRatio: minAspectRatio,
+      maxAspectRatio: maxAspectRatio,
+      colors: SwiftyCropConfiguration.Colors(
+        cancelButton: Color.primary,
+        interactionInstructions: Color.primary,
+        rotateButton: Color.primary,
+        resetRotationButton: Color.primary,
+        saveButton: Color.primary,
+        background: Color.primary,
+        cropHandle: Color.primary
+      )
+    )
+  }
+
   private func loadImage() {
     Task {
       selectedImage = await downloadExampleImage()
@@ -265,15 +278,26 @@ struct ContentView: View {
   
   // Example function for downloading an image
   private func downloadExampleImage() async -> PlatformImage? {
-    let portraitUrlString = "https://picsum.photos/1000/1200"
-    let landscapeUrlString = "https://picsum.photos/2000/1000"
+    let portraitUrlString = "https://loremflickr.com/1000/1200"
+    let landscapeUrlString = "https://loremflickr.com/2000/1000"
     let urlString = Int.random(in: 0...1) == 0 ? portraitUrlString : landscapeUrlString
-    guard let url = URL(string: urlString),
-          let (data, _) = try? await URLSession.shared.data(from: url),
-          let image = PlatformImage(data: data)
-    else { return nil }
+    guard let url = URL(string: urlString) else { return nil }
 
-    return image
+    do {
+      let (data, response) = try await URLSession.shared.data(from: url)
+      if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+        print("Example image download failed: HTTP \(httpResponse.statusCode) from \(urlString)")
+        return nil
+      }
+      guard let image = PlatformImage(data: data) else {
+        print("Example image download failed: response was not a decodable image from \(urlString)")
+        return nil
+      }
+      return image
+    } catch {
+      print("Example image download failed: \(error.localizedDescription)")
+      return nil
+    }
   }
 }
 

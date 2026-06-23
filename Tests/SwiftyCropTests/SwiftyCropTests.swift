@@ -10,7 +10,6 @@ final class SwiftyCropTests: XCTestCase {
       cropImageCircular: true,
       rotateImage: true,
       rotateImageWithButtons: true,
-      usesLiquidGlassDesign: true,
       zoomSensitivity: 2,
       rectAspectRatio: 4/3,
       texts: SwiftyCropConfiguration.Texts(
@@ -36,7 +35,6 @@ final class SwiftyCropTests: XCTestCase {
     XCTAssertEqual(configuration.cropImageCircular, true)
     XCTAssertEqual(configuration.rotateImage, true)
     XCTAssertEqual(configuration.rotateImageWithButtons, true)
-    XCTAssertEqual(configuration.usesLiquidGlassDesign, true)
     XCTAssertEqual(configuration.zoomSensitivity, 2)
     XCTAssertEqual(configuration.rectAspectRatio, 4/3)
     

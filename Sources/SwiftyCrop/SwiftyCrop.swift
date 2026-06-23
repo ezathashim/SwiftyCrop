@@ -58,6 +58,22 @@ public struct SwiftyCropView: View {
     #endif
 
     public var body: some View {
+        #if canImport(UIKit)
+        // On iOS/visionOS the view is typically presented in a sheet or fullScreenCover,
+        // so it owns its navigation context.
+        NavigationView {
+            CropView(
+                image: imageToCrop,
+                maskShape: maskShape,
+                configuration: configuration,
+                onCancel: onCancel,
+                onComplete: onComplete
+            )
+            .ignoresSafeArea(.container, edges: .top) // Centers view between the toolbar and  the bottom of the screen
+        }
+        #else
+        // On macOS the consumer provides a NavigationStack via navigationDestination;
+        // CropView just renders its toolbar into the existing navigation bar.
         CropView(
             image: imageToCrop,
             maskShape: maskShape,
@@ -65,5 +81,6 @@ public struct SwiftyCropView: View {
             onCancel: onCancel,
             onComplete: onComplete
         )
+        #endif
     }
 }

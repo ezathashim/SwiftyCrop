@@ -8,7 +8,6 @@ public struct SwiftyCropConfiguration {
   public let cropImageCircular: Bool
   public let rotateImage: Bool
   public let rotateImageWithButtons: Bool
-  public let usesLiquidGlassDesign: Bool
   public let zoomSensitivity: CGFloat
   public let rectAspectRatio: CGFloat
   public let allowAspectRatioResizing: Bool
@@ -19,7 +18,7 @@ public struct SwiftyCropConfiguration {
   public let colors: Colors
   
   /// Creates a new instance of `Texts` that are used in the cropping view.
-  /// - Note: The new LiquidGlass design does not use texts anymore but icon buttons. Setting this when Liquid Glass is enabled will not have any effect.
+  /// - Note: On iOS/visionOS/macOS 26+ the Liquid Glass design uses icon buttons instead of text, so button texts set here have no effect there.
   ///
   /// - Parameters:
   ///   - cancelButton: The text for the cancel button. Defaults to `nil`, using localized values from the app.
@@ -47,7 +46,7 @@ public struct SwiftyCropConfiguration {
   }
   
   /// Creates a new instance of `Fonts` that are used in the cropping view texts.
-  /// - Note: The new LiquidGlass design does not use texts anymore but icon buttons. Setting this when Liquid Glass is enabled will not have any effect.
+  /// - Note: On iOS/visionOS/macOS 26+ the Liquid Glass design uses icon buttons instead of text, so button fonts set here have no effect there.
   ///
   /// - Parameters:
   ///   - cancelButton: The font for the cancel button text. Defaults to `nil`, using default values.
@@ -137,8 +136,6 @@ public struct SwiftyCropConfiguration {
   ///
   ///   - rotateImageWithButtons: Option to show rotation buttons. Defaults to `false`.
   ///
-  ///   - usesLiquidGlassDesign: Apply the all new liquid glass design. Defaults to `#available(iOS 26,*)*`.
-  ///
   ///   - zoomSensitivity: Sensitivity when zooming. Default is `1.0`. Decrease to increase sensitivity.
   ///
   ///   - rectAspectRatio: The aspect ratio to use when a `.rectangle` mask shape is used. Defaults to `4:3`.
@@ -160,7 +157,6 @@ public struct SwiftyCropConfiguration {
     cropImageCircular: Bool = false,
     rotateImage: Bool = false,
     rotateImageWithButtons: Bool = false,
-    usesLiquidGlassDesign: Bool? = nil,
     zoomSensitivity: CGFloat = 1,
     rectAspectRatio: CGFloat = 4/3,
     allowAspectRatioResizing: Bool = false,
@@ -183,16 +179,5 @@ public struct SwiftyCropConfiguration {
     self.texts = texts
     self.fonts = fonts
     self.colors = colors
-    
-    self.usesLiquidGlassDesign = {
-      guard let usesLiquidGlassDesign else {
-        if #available(iOS 26, *) {
-          return true
-        } else {
-          return false
-        }
-      }
-      return usesLiquidGlassDesign
-    }()
   }
 }
