@@ -47,11 +47,8 @@ struct CropView: View {
   // MARK: - Body
   var body: some View {
     ZStack {
-        VStack(spacing: 0) {
-            cropImageView
-            zoomSlider
-        }
-      
+        cropImageView
+        
       if isCropping {
         ProgressLayer(configuration: configuration, localizableTableName: localizableTableName)
       }
@@ -65,26 +62,22 @@ struct CropView: View {
   }
     
         // MARK: - Zoom Slider
-    @ViewBuilder
-    private var zoomSlider: some View {
-        if configuration.showsZoomSlider, let scaleRange {
-            HStack(spacing: 12) {
-                Image(systemName: "minus.magnifyingglass")
-                Slider(
-                    value: Binding(
-                        get: { min(max(viewModel.scale, scaleRange.lowerBound), scaleRange.upperBound) },
-                        set: { setScale($0) }
-                    ),
-                    in: scaleRange
-                )
-                .accessibilityLabel(zoomSliderLabel)
-                Image(systemName: "plus.magnifyingglass")
-            }
-            .foregroundStyle(configuration.colors.interactionInstructions)
-            .frame(maxWidth: 320)
-            .padding(.horizontal, 20)
-            .padding(.bottom, 20)
+    private func zoomSlider(scaleRange: ClosedRange<CGFloat>) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "minus.magnifyingglass")
+            Slider(
+                value: Binding(
+                    get: { min(max(viewModel.scale, scaleRange.lowerBound), scaleRange.upperBound) },
+                    set: { setScale($0) }
+                ),
+                in: scaleRange
+            )
+            .frame(width: 160)
+            .accessibilityLabel(zoomSliderLabel)
+            Image(systemName: "plus.magnifyingglass")
         }
+        .foregroundStyle(configuration.colors.interactionInstructions)
+        .controlSize(.small)
     }
     
         /// The valid scale range, or nil before layout has measured the image.
@@ -293,6 +286,12 @@ struct CropView: View {
       .disabled(isCropping)
       .tintedGlassEffect()
     }
+      
+      ToolbarItem(placement: .principal) {
+          if configuration.showsZoomSlider, let scaleRange {
+              zoomSlider(scaleRange: scaleRange)
+          }
+      }
   }
 
   private var maskHandlesOverlay: some View {
