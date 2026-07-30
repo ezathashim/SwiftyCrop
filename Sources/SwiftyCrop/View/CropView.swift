@@ -72,7 +72,6 @@ struct CropView: View {
                 ),
                 in: scaleRange
             )
-            .frame(width: 160)
             .accessibilityLabel(zoomSliderLabel)
             Image(systemName: "plus.magnifyingglass")
         }
