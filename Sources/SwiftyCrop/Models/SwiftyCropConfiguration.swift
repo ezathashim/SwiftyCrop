@@ -8,6 +8,7 @@ public struct SwiftyCropConfiguration {
   public let cropImageCircular: Bool
   public let rotateImage: Bool
   public let rotateImageWithButtons: Bool
+  public let showsZoomSlider: Bool
   public let zoomSensitivity: CGFloat
   public let rectAspectRatio: CGFloat
   public let allowAspectRatioResizing: Bool
@@ -25,24 +26,28 @@ public struct SwiftyCropConfiguration {
   ///   - interactionInstructions: The text for the interaction instructions. Defaults to `nil`, using localized values from the app.
   ///   - saveButton: The text for the save button. Defaults to `nil`, using localized values from the app.
   ///   - progressLayerText: The text for the progress view indicating that cropping occurs. Defaults to `nil`, using localized values from the app.
+  ///   - zoomSliderLabel: The accessibility label for the zoom slider. Unlike the button texts this applies on 26+ as well, since it is never displayed on screen. Defaults to `nil`, using localized values from the app.
   public struct Texts {
     public init(
       // We cannot use the localized values here because module access is not given in init
       cancelButton: String? = nil,
       interactionInstructions: String? = nil,
       saveButton: String? = nil,
-      progressLayerText: String? = nil
+      progressLayerText: String? = nil,
+      zoomSliderLabel: String? = nil
     ) {
       self.cancelButton = cancelButton
       self.interactionInstructions = interactionInstructions
       self.saveButton = saveButton
       self.progressLayerText = progressLayerText
+      self.zoomSliderLabel = zoomSliderLabel
     }
     
     public let cancelButton: String?
     public let interactionInstructions: String?
     public let saveButton: String?
     public let progressLayerText: String?
+    public let zoomSliderLabel: String?
   }
   
   /// Creates a new instance of `Fonts` that are used in the cropping view texts.
@@ -136,6 +141,8 @@ public struct SwiftyCropConfiguration {
   ///
   ///   - rotateImageWithButtons: Option to show rotation buttons. Defaults to `false`.
   ///
+  ///   - showsZoomSlider: Option to show a zoom slider below the image, useful for input devices without pinch-to-zoom. Defaults to `false`.
+  ///
   ///   - zoomSensitivity: Sensitivity when zooming. Default is `1.0`. Decrease to increase sensitivity.
   ///
   ///   - rectAspectRatio: The aspect ratio to use when a `.rectangle` mask shape is used. Defaults to `4:3`.
@@ -157,6 +164,7 @@ public struct SwiftyCropConfiguration {
     cropImageCircular: Bool = false,
     rotateImage: Bool = false,
     rotateImageWithButtons: Bool = false,
+    showsZoomSlider: Bool = false,
     zoomSensitivity: CGFloat = 1,
     rectAspectRatio: CGFloat = 4/3,
     allowAspectRatioResizing: Bool = false,
@@ -171,6 +179,7 @@ public struct SwiftyCropConfiguration {
     self.cropImageCircular = cropImageCircular
     self.rotateImage = rotateImage
     self.rotateImageWithButtons = rotateImageWithButtons
+    self.showsZoomSlider = showsZoomSlider
     self.zoomSensitivity = zoomSensitivity
     self.rectAspectRatio = rectAspectRatio
     self.allowAspectRatioResizing = allowAspectRatioResizing

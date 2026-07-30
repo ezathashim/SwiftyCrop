@@ -47,7 +47,10 @@ struct CropView: View {
   // MARK: - Body
   var body: some View {
     ZStack {
-      cropImageView
+        VStack(spacing: 0) {
+            cropImageView
+            zoomSlider
+        }
       
       if isCropping {
         ProgressLayer(configuration: configuration, localizableTableName: localizableTableName)
@@ -60,6 +63,50 @@ struct CropView: View {
       toolbarView
     }
   }
+    
+        // MARK: - Zoom Slider
+    @ViewBuilder
+    private var zoomSlider: some View {
+        if configuration.showsZoomSlider, let scaleRange {
+            HStack(spacing: 12) {
+                Image(systemName: "minus.magnifyingglass")
+                Slider(
+                    value: Binding(
+                        get: { min(max(viewModel.scale, scaleRange.lowerBound), scaleRange.upperBound) },
+                        set: { setScale($0) }
+                    ),
+                    in: scaleRange
+                )
+                .accessibilityLabel(zoomSliderLabel)
+                Image(systemName: "plus.magnifyingglass")
+            }
+            .foregroundStyle(configuration.colors.interactionInstructions)
+            .frame(maxWidth: 320)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 20)
+        }
+    }
+    
+        /// The valid scale range, or nil before layout has measured the image.
+    private var scaleRange: ClosedRange<CGFloat>? {
+        guard viewModel.imageSizeInView.width > 0,
+              viewModel.imageSizeInView.height > 0 else { return nil }
+        let maxScaleValues = viewModel.calculateMagnificationGestureMaxValues()
+        guard maxScaleValues.0 < maxScaleValues.1 else { return nil }
+        return maxScaleValues.0...maxScaleValues.1
+    }
+    
+    private func setScale(_ newScale: CGFloat) {
+        let maxScaleValues = viewModel.calculateMagnificationGestureMaxValues()
+        viewModel.scale = min(max(newScale, maxScaleValues.0), maxScaleValues.1)
+        viewModel.lastScale = viewModel.scale
+        updateOffset()
+    }
+    
+    private var zoomSliderLabel: String {
+        configuration.texts.zoomSliderLabel ??
+        NSLocalizedString("zoom_slider_label", tableName: localizableTableName, bundle: .module, comment: "")
+    }
   
   // MARK: - Gestures
   private var magnificationGesture: some Gesture {
