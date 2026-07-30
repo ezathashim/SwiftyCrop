@@ -248,14 +248,19 @@ struct CropView: View {
         configuration: configuration
       )
     }
+      
     ToolbarItem(placement: .principal) {
-      Text(
-        configuration.texts.interactionInstructions ??
-          NSLocalizedString("interaction_instructions", tableName: localizableTableName, bundle: .module, comment: "")
-      )
-      .padding(.horizontal)
-      .font(configuration.fonts.interactionInstructions)
-      .foregroundStyle(configuration.colors.interactionInstructions)
+        if configuration.showsZoomSlider, let scaleRange {
+            zoomSlider(scaleRange: scaleRange)
+        } else {
+            Text(
+                configuration.texts.interactionInstructions ??
+                NSLocalizedString("interaction_instructions", tableName: localizableTableName, bundle: .module, comment: "")
+            )
+            .padding(.horizontal)
+            .font(configuration.fonts.interactionInstructions)
+            .foregroundStyle(configuration.colors.interactionInstructions)
+        }
     }
     #if !os(visionOS)
     if #available(iOS 26, macOS 26, *) {
@@ -286,12 +291,6 @@ struct CropView: View {
       .disabled(isCropping)
       .tintedGlassEffect()
     }
-      
-      ToolbarItem(placement: .principal) {
-          if configuration.showsZoomSlider, let scaleRange {
-              zoomSlider(scaleRange: scaleRange)
-          }
-      }
   }
 
   private var maskHandlesOverlay: some View {
