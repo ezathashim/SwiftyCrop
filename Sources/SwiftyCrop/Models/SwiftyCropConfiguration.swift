@@ -23,7 +23,7 @@ public struct SwiftyCropConfiguration {
   ///
   /// - Parameters:
   ///   - cancelButton: The text for the cancel button. Defaults to `nil`, using localized values from the app.
-  ///   - interactionInstructions: The text for the interaction instructions. Defaults to `nil`, using localized values from the app.
+  ///   - interactionInstructions: The text for the interaction instructions. Defaults to `nil`, using localized values from the app. Has no effect while `showsZoomSlider` is enabled, as the slider replaces this text.
   ///   - saveButton: The text for the save button. Defaults to `nil`, using localized values from the app.
   ///   - progressLayerText: The text for the progress view indicating that cropping occurs. Defaults to `nil`, using localized values from the app.
   ///   - zoomSliderLabel: The accessibility label for the zoom slider. Unlike the button texts this applies on 26+ as well, since it is never displayed on screen. Defaults to `nil`, using localized values from the app.
@@ -88,6 +88,7 @@ public struct SwiftyCropConfiguration {
   ///   - saveButtonBackground: If Liquid Glass is enabled, will be the background color of the button. Otherwise has no effect. Defaults to `.yellow`.
   ///   - background: The background color of the entire cropping view. Defaults to `.black`.
   ///   - cropHandle: The color of the aspect ratio resize handles shown on rectangle masks (if allowAspectRatioResizing is enabled). Defaults to `.white`.
+  ///   - zoomSlider: The color of the zoom slider and its icons (if showsZoomSlider is enabled). Defaults to `.white`.
   public struct Colors {
     public init(
       cancelButton: Color = .white,
@@ -100,7 +101,8 @@ public struct SwiftyCropConfiguration {
       saveButton: Color = .white,
       saveButtonBackground: Color = .yellow,
       background: Color = .black,
-      cropHandle: Color = .white
+      cropHandle: Color = .white,
+      zoomSlider: Color = .white
     ) {
       self.cancelButton = cancelButton
       self.cancelButtonBackground = cancelButtonBackground
@@ -113,6 +115,7 @@ public struct SwiftyCropConfiguration {
       self.saveButtonBackground = saveButtonBackground
       self.background = background
       self.cropHandle = cropHandle
+      self.zoomSlider = zoomSlider
     }
     
     public let cancelButton: Color
@@ -126,6 +129,7 @@ public struct SwiftyCropConfiguration {
     public let saveButtonBackground: Color
     public let background: Color
     public let cropHandle: Color
+    public let zoomSlider: Color
   }
   
   /// Creates a new instance of `SwiftyCropConfiguration`.
@@ -141,7 +145,10 @@ public struct SwiftyCropConfiguration {
   ///
   ///   - rotateImageWithButtons: Option to show rotation buttons. Defaults to `false`.
   ///
-  ///   - showsZoomSlider: Option to show a zoom slider below the image, useful for input devices without pinch-to-zoom. Defaults to `false`.
+  ///   - showsZoomSlider: Option to show a zoom slider, useful for input devices that cannot pinch-to-zoom
+  ///   (mouse, VoiceOver, Switch Control, Full Keyboard Access). Defaults to `false`.
+  ///   - Important: The slider occupies the same toolbar slot as the interaction instructions. While it is shown,
+  ///   the instructions text is not displayed and `texts.interactionInstructions` has no effect.
   ///
   ///   - zoomSensitivity: Sensitivity when zooming. Default is `1.0`. Decrease to increase sensitivity.
   ///

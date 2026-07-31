@@ -47,8 +47,8 @@ struct CropView: View {
   // MARK: - Body
   var body: some View {
     ZStack {
-        cropImageView
-        
+      cropImageView
+      
       if isCropping {
         ProgressLayer(configuration: configuration, localizableTableName: localizableTableName)
       }
@@ -60,46 +60,6 @@ struct CropView: View {
       toolbarView
     }
   }
-    
-        // MARK: - Zoom Slider
-    private func zoomSlider(scaleRange: ClosedRange<CGFloat>) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "minus.magnifyingglass")
-            Slider(
-                value: Binding(
-                    get: { min(max(viewModel.scale, scaleRange.lowerBound), scaleRange.upperBound) },
-                    set: { setScale($0) }
-                ),
-                in: scaleRange
-            )
-            .frame(minWidth: 120, idealWidth: 160, maxWidth: 240)
-            .accessibilityLabel(zoomSliderLabel)
-            Image(systemName: "plus.magnifyingglass")
-        }
-        .foregroundStyle(configuration.colors.interactionInstructions)
-        .controlSize(.small)
-    }
-    
-        /// The valid scale range, or nil before layout has measured the image.
-    private var scaleRange: ClosedRange<CGFloat>? {
-        guard viewModel.imageSizeInView.width > 0,
-              viewModel.imageSizeInView.height > 0 else { return nil }
-        let maxScaleValues = viewModel.calculateMagnificationGestureMaxValues()
-        guard maxScaleValues.0 < maxScaleValues.1 else { return nil }
-        return maxScaleValues.0...maxScaleValues.1
-    }
-    
-    private func setScale(_ newScale: CGFloat) {
-        let maxScaleValues = viewModel.calculateMagnificationGestureMaxValues()
-        viewModel.scale = min(max(newScale, maxScaleValues.0), maxScaleValues.1)
-        viewModel.lastScale = viewModel.scale
-        updateOffset()
-    }
-    
-    private var zoomSliderLabel: String {
-        configuration.texts.zoomSliderLabel ??
-        NSLocalizedString("zoom_slider_label", tableName: localizableTableName, bundle: .module, comment: "")
-    }
   
   // MARK: - Gestures
   private var magnificationGesture: some Gesture {
@@ -223,6 +183,52 @@ struct CropView: View {
     .simultaneousGesture(configuration.rotateImage ? rotationGesture : nil)
   }
 
+  /// Slider to zoom the image without a pinch gesture, for input devices that cannot perform one
+  /// (mouse, VoiceOver, Switch Control, Full Keyboard Access).
+  private func zoomSlider(scaleRange: ClosedRange<CGFloat>) -> some View {
+    HStack(spacing: 8) {
+      Image(systemName: "minus.magnifyingglass")
+        .accessibilityHidden(true)
+
+      Slider(
+        value: Binding(
+          get: { min(max(viewModel.scale, scaleRange.lowerBound), scaleRange.upperBound) },
+          set: { setScale($0) }
+        ),
+        in: scaleRange
+      )
+      .frame(minWidth: 120, idealWidth: 160, maxWidth: 240)
+      .accessibilityLabel(zoomSliderLabel)
+
+      Image(systemName: "plus.magnifyingglass")
+        .accessibilityHidden(true)
+    }
+    .padding(.horizontal, 8)
+    .foregroundStyle(configuration.colors.zoomSlider)
+    .controlSize(.small)
+  }
+
+  /// The valid scale range, or `nil` before layout has measured the image.
+  private var scaleRange: ClosedRange<CGFloat>? {
+    guard viewModel.imageSizeInView.width > 0,
+          viewModel.imageSizeInView.height > 0 else { return nil }
+    let maxScaleValues = viewModel.calculateMagnificationGestureMaxValues()
+    guard maxScaleValues.0 < maxScaleValues.1 else { return nil }
+    return maxScaleValues.0...maxScaleValues.1
+  }
+
+  private func setScale(_ newScale: CGFloat) {
+    let maxScaleValues = viewModel.calculateMagnificationGestureMaxValues()
+    viewModel.scale = min(max(newScale, maxScaleValues.0), maxScaleValues.1)
+    viewModel.lastScale = viewModel.scale
+    updateOffset()
+  }
+
+  private var zoomSliderLabel: String {
+    configuration.texts.zoomSliderLabel ??
+      NSLocalizedString("zoom_slider_label", tableName: localizableTableName, bundle: .module, comment: "")
+  }
+
   @ToolbarContentBuilder
   private var toolbarView: some ToolbarContent {
     ToolbarItem(placement: .cancellationAction) {
@@ -248,19 +254,19 @@ struct CropView: View {
         configuration: configuration
       )
     }
-      
     ToolbarItem(placement: .principal) {
-        if configuration.showsZoomSlider, let scaleRange {
-            zoomSlider(scaleRange: scaleRange)
-        } else {
-            Text(
-                configuration.texts.interactionInstructions ??
-                NSLocalizedString("interaction_instructions", tableName: localizableTableName, bundle: .module, comment: "")
-            )
-            .padding(.horizontal)
-            .font(configuration.fonts.interactionInstructions)
-            .foregroundStyle(configuration.colors.interactionInstructions)
-        }
+      // The zoom slider takes over this slot, so the interaction instructions are hidden while it is shown.
+      if configuration.showsZoomSlider, let scaleRange {
+        zoomSlider(scaleRange: scaleRange)
+      } else {
+        Text(
+          configuration.texts.interactionInstructions ??
+            NSLocalizedString("interaction_instructions", tableName: localizableTableName, bundle: .module, comment: "")
+        )
+        .padding(.horizontal)
+        .font(configuration.fonts.interactionInstructions)
+        .foregroundStyle(configuration.colors.interactionInstructions)
+      }
     }
     #if !os(visionOS)
     if #available(iOS 26, macOS 26, *) {

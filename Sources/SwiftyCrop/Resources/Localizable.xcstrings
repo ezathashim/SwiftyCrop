@@ -667,7 +667,7 @@
       }
     },
     "zoom_slider_label" : {
-      "comment" : "label to indicate the functionality of s zoom slider",
+      "comment" : "Accessibility label for the zoom slider",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
