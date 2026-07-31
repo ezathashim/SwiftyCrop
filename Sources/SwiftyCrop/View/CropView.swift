@@ -15,16 +15,16 @@ struct CropView: View {
   private let image: PlatformImage
   private let maskShape: MaskShape
   private let configuration: SwiftyCropConfiguration
-  private let onCancel: (() -> Void)?
-  private let onComplete: (PlatformImage?) -> Void
+  private let onCancel: (@MainActor () -> Void)?
+  private let onComplete: @MainActor (PlatformImage?) -> Void
   private let localizableTableName: String
 
   init(
     image: PlatformImage,
     maskShape: MaskShape,
     configuration: SwiftyCropConfiguration,
-    onCancel: (() -> Void)? = nil,
-    onComplete: @escaping (PlatformImage?) -> Void
+    onCancel: (@MainActor () -> Void)? = nil,
+    onComplete: @escaping @MainActor (PlatformImage?) -> Void
   ) {
     self.image = image
     self.maskShape = maskShape
