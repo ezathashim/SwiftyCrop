@@ -428,7 +428,7 @@ struct RotationControlsView: ToolbarContent {
   @State private var showRotationPopover: Bool = false
 
   var body: some ToolbarContent {
-    #if os(iOS) || os(visionOS)
+    #if (os(iOS) && !targetEnvironment(macCatalyst)) || os(visionOS)
     ToolbarItem(placement: .navigation) {
       if #available(iOS 16.4, visionOS 1.0, *) {
         Button {
