@@ -130,24 +130,9 @@ class CropViewModel: ObservableObject {
      */
     func cropToRectangle(_ image: PlatformImage) -> PlatformImage? {
         guard let orientedImage = image.correctlyOriented else { return nil }
-
-        let cropRect = calculateCropRect(orientedImage)
-
-        #if canImport(UIKit)
-        guard let cgImage = orientedImage.cgImage,
-              let result = cgImage.cropping(to: cropRect) else {
-            return nil
-        }
-        return UIImage(cgImage: result)
-        #elseif canImport(AppKit)
-        guard let cgImage = orientedImage.cgImage(forProposedRect: nil, context: nil, hints: nil),
-              let croppedCGImage = cgImage.cropping(to: cropRect) else {
-            return nil
-        }
-        return NSImage(cgImage: croppedCGImage, size: cropRect.size)
-        #endif
+        return cropBitmap(of: orientedImage, to: calculateCropRect(orientedImage))
     }
-    
+
     /**
      Crops the given image to a square based on the current mask size and position.
      - Parameter image: The PlatformImage to crop.
@@ -155,24 +140,31 @@ class CropViewModel: ObservableObject {
      */
     func cropToSquare(_ image: PlatformImage) -> PlatformImage? {
         guard let orientedImage = image.correctlyOriented else { return nil }
+        return cropBitmap(of: orientedImage, to: calculateCropRect(orientedImage))
+    }
 
-        let cropRect = calculateCropRect(orientedImage)
-
+    /**
+     Crops the bitmap backing the given image to the given area.
+     - Parameter orientedImage: The correctly oriented PlatformImage to crop.
+     - Parameter cropRect: The area to keep, in the image's point coordinate space.
+     - Returns: A cropped PlatformImage, or nil if cropping fails.
+     */
+    private func cropBitmap(of orientedImage: PlatformImage, to cropRect: CGRect) -> PlatformImage? {
         #if canImport(UIKit)
         guard let cgImage = orientedImage.cgImage,
-              let result = cgImage.cropping(to: cropRect) else {
+              let result = cgImage.cropping(to: cropRect.inPixels(of: cgImage, pointSize: orientedImage.size)) else {
             return nil
         }
-        return UIImage(cgImage: result)
+        return UIImage(cgImage: result, scale: orientedImage.scale, orientation: .up)
         #elseif canImport(AppKit)
         guard let cgImage = orientedImage.cgImage(forProposedRect: nil, context: nil, hints: nil),
-              let croppedCGImage = cgImage.cropping(to: cropRect) else {
+              let croppedCGImage = cgImage.cropping(to: cropRect.inPixels(of: cgImage, pointSize: orientedImage.size)) else {
             return nil
         }
         return NSImage(cgImage: croppedCGImage, size: cropRect.size)
         #endif
     }
-    
+
     /**
      Crops the given image to a circle based on the current mask size and position.
      - Parameter image: The PlatformImage to crop.
@@ -298,6 +290,32 @@ extension PlatformImage {
         #elseif canImport(AppKit)
         return self
         #endif
+    }
+}
+
+private extension CGRect {
+    /**
+     Converts a rect measured in an image's point coordinate space into the pixel coordinate space of
+     its bitmap, which is the space `CGImage.cropping(to:)` works in.
+
+     The two are not the same. On macOS `NSImage.size` is derived from the file's DPI metadata, so a
+     96 dpi image reports 0.75x its pixel dimensions. On iOS `UIImage.size` is the pixel size divided
+     by `scale`. Cropping a point sized rect out of the bitmap would keep too small an area, offset
+     towards the top left corner.
+     - Parameter cgImage: The bitmap the resulting rect is measured against.
+     - Parameter pointSize: The size of the image in points, as laid out on screen.
+     - Returns: The equivalent rect in pixels.
+     */
+    func inPixels(of cgImage: CGImage, pointSize: CGSize) -> CGRect {
+        guard pointSize.width > 0, pointSize.height > 0 else { return self }
+        let scaleX = CGFloat(cgImage.width) / pointSize.width
+        let scaleY = CGFloat(cgImage.height) / pointSize.height
+        return CGRect(
+            x: origin.x * scaleX,
+            y: origin.y * scaleY,
+            width: size.width * scaleX,
+            height: size.height * scaleY
+        )
     }
 }
 
