@@ -12,7 +12,7 @@ import UniformTypeIdentifiers
 /// both too small and offset towards the top left corner.
 final class CropGeometryTests: XCTestCase {
   func testSquareCropIsCentredWhenPointSizeDiffersFromPixelSize() throws {
-    // 800x600 pixels tagged as 144 dpi: `NSImage.size` reports 400x300, the bitmap stays 800x600.
+    // 800x600 pixels at 144 dpi: the image reports 400x300 points, the bitmap stays 800x600.
     let image = try XCTUnwrap(Self.makeSplitImage(pixelsWide: 800, pixelsHigh: 600, dpi: 144))
     let viewModel = Self.makeViewModel()
 
@@ -123,7 +123,14 @@ final class CropGeometryTests: XCTestCase {
     )
     guard CGImageDestinationFinalize(destination) else { return nil }
 
+    #if canImport(UIKit)
+    // `UIImage(data:)` ignores the DPI tag and always reports scale 1, which would make points and
+    // pixels identical and defeat the point of these tests. Pass the equivalent scale explicitly so
+    // both platforms end up with the same point size for the same bitmap.
+    return PlatformImage(data: data as Data, scale: dpi / 72)
+    #elseif canImport(AppKit)
     return PlatformImage(data: data as Data)
+    #endif
   }
 
   private static func cgImage(of image: PlatformImage) -> CGImage? {
