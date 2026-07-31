@@ -234,7 +234,9 @@ struct CropView: View {
     ToolbarItem(placement: .cancellationAction) {
       Button {
         onCancel?()
-        dismiss()
+        if configuration.dismissOnSaveCancelAction {
+            dismiss()
+        }
       } label: {
         Label(
           configuration.texts.cancelButton ??
@@ -279,9 +281,11 @@ struct CropView: View {
           await MainActor.run { isCropping = true }
           let result = cropImage()
           await MainActor.run {
-            onComplete(result)
-            dismiss()
             isCropping = false
+            onComplete(result)
+            if configuration.dismissOnSaveCancelAction {
+                dismiss()
+            }
           }
         }
       } label: {
