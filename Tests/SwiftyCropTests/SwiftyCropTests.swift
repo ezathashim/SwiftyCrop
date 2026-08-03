@@ -13,6 +13,7 @@ final class SwiftyCropTests: XCTestCase {
       showsZoomSlider: true,
       zoomSensitivity: 2,
       rectAspectRatio: 4/3,
+      dismissesOnCompletion: false,
       texts: SwiftyCropConfiguration.Texts(
         cancelButton: "Test 1",
         interactionInstructions: "Test 2",
@@ -41,7 +42,8 @@ final class SwiftyCropTests: XCTestCase {
     XCTAssertEqual(configuration.showsZoomSlider, true)
     XCTAssertEqual(configuration.zoomSensitivity, 2)
     XCTAssertEqual(configuration.rectAspectRatio, 4/3)
-    
+    XCTAssertEqual(configuration.dismissesOnCompletion, false)
+
     XCTAssertEqual(configuration.texts.cancelButton, "Test 1")
     XCTAssertEqual(configuration.texts.interactionInstructions, "Test 2")
     XCTAssertEqual(configuration.texts.saveButton, "Test 3")
@@ -56,6 +58,12 @@ final class SwiftyCropTests: XCTestCase {
     XCTAssertEqual(configuration.colors.saveButton, Color.green)
     XCTAssertEqual(configuration.colors.background, Color.gray)
     XCTAssertEqual(configuration.colors.zoomSlider, Color.orange)
+  }
+
+  func testDismissesOnCompletionDefault() {
+    let configuration = SwiftyCropConfiguration()
+
+    XCTAssertEqual(configuration.dismissesOnCompletion, true)
   }
 
   func testZoomSliderDefaults() {

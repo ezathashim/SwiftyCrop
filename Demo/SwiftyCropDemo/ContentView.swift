@@ -23,6 +23,7 @@ struct ContentView: View {
   @State private var allowAspectRatioResizing: Bool
   @State private var minAspectRatio: CGFloat
   @State private var maxAspectRatio: CGFloat
+  @State private var dismissesOnCompletion: Bool
   @FocusState private var textFieldFocused: Bool
   @EnvironmentObject private var cropSession: CropSession
   #if os(macOS)
@@ -56,6 +57,7 @@ struct ContentView: View {
     _allowAspectRatioResizing = State(initialValue: defaultConfiguration.allowAspectRatioResizing)
     _minAspectRatio = State(initialValue: defaultConfiguration.minAspectRatio)
     _maxAspectRatio = State(initialValue: defaultConfiguration.maxAspectRatio)
+    _dismissesOnCompletion = State(initialValue: defaultConfiguration.dismissesOnCompletion)
   }
   
   var body: some View {
@@ -142,6 +144,8 @@ struct ContentView: View {
           Toggle("Rotate image (buttons)", isOn: $rotateImageWithButtons)
 
           Toggle("Show zoom slider", isOn: $showsZoomSlider)
+
+          Toggle("Dismiss on completion", isOn: $dismissesOnCompletion)
 
           HStack {
             Text("Max magnification")
@@ -242,10 +246,17 @@ struct ContentView: View {
         configuration: makeCropConfiguration(),
         onCancel: {
           print("Operation cancelled")
+          // With `dismissesOnCompletion` disabled, the presenting view dismisses the cropper itself
+          if !dismissesOnCompletion {
+            showImageCropper = false
+          }
         }
       ) { croppedImage in
         // Do something with the returned, cropped image
         self.selectedImage = croppedImage
+        if !dismissesOnCompletion {
+          showImageCropper = false
+        }
       }
     }
   }
@@ -263,6 +274,7 @@ struct ContentView: View {
       allowAspectRatioResizing: allowAspectRatioResizing,
       minAspectRatio: minAspectRatio,
       maxAspectRatio: maxAspectRatio,
+      dismissesOnCompletion: dismissesOnCompletion,
       colors: SwiftyCropConfiguration.Colors(
         cancelButton: Color.primary,
         interactionInstructions: Color.primary,

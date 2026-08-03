@@ -14,7 +14,7 @@ public struct SwiftyCropConfiguration {
   public let allowAspectRatioResizing: Bool
   public let minAspectRatio: CGFloat
   public let maxAspectRatio: CGFloat
-  public let dismissOnSaveCancelAction: Bool
+  public let dismissesOnCompletion: Bool
   public let texts: Texts
   public let fonts: Fonts
   public let colors: Colors
@@ -161,7 +161,8 @@ public struct SwiftyCropConfiguration {
   ///
   ///   - maxAspectRatio: The maximum allowed aspect ratio (width/height) when resizing a rectangle mask. Defaults to `10.0`.
   ///
-  ///   - dismissOnSaveCancelAction: will call dismiss() when pressing Save or Cancel. In some situsations, the dismissal is best handled by a super-view. Defaults to 'true'.
+  ///   - dismissesOnCompletion: Whether the cropping view dismisses itself after the save or cancel button was tapped.
+  ///   Set this to `false` if the presenting view handles the dismissal itself. Defaults to `true`.
   ///
   ///   - texts: `Texts` object when using custom texts for the cropping view.
   ///
@@ -180,7 +181,7 @@ public struct SwiftyCropConfiguration {
     allowAspectRatioResizing: Bool = false,
     minAspectRatio: CGFloat = 0.1,
     maxAspectRatio: CGFloat = 10.0,
-    dismissOnSaveCancelAction: Bool = true,
+    dismissesOnCompletion: Bool = true,
     texts: Texts = Texts(),
     fonts: Fonts = Fonts(),
     colors: Colors = Colors()
@@ -196,7 +197,7 @@ public struct SwiftyCropConfiguration {
     self.allowAspectRatioResizing = allowAspectRatioResizing
     self.minAspectRatio = minAspectRatio
     self.maxAspectRatio = maxAspectRatio
-    self.dismissOnSaveCancelAction = dismissOnSaveCancelAction
+    self.dismissesOnCompletion = dismissesOnCompletion
     self.texts = texts
     self.fonts = fonts
     self.colors = colors

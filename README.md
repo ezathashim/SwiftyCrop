@@ -183,6 +183,7 @@ You can also configure `SwiftyCropView` by passing a `SwiftyCropConfiguration`. 
 | `allowAspectRatioResizing` | `Bool`: When using the `rectangle` mask shape, whether the user can freely resize the aspect ratio by dragging the edge handles. Defaults to `false`. |
 | `minAspectRatio` | `CGFloat`: The minimum allowed aspect ratio (width / height) when `allowAspectRatioResizing` is enabled. Defaults to `0.1`. |
 | `maxAspectRatio` | `CGFloat`: The maximum allowed aspect ratio (width / height) when `allowAspectRatioResizing` is enabled. Defaults to `10.0`. |
+| `dismissesOnCompletion` | `Bool`: Whether the cropping view dismisses itself after the save or cancel button was tapped. Set to `false` if the presenting view handles the dismissal itself. Defaults to `true`. |
 | `texts` | `Texts`: Defines custom texts for the buttons and instructions. Defaults to using localized strings from resources. |
 | `fonts` | `Fonts`: Defines custom fonts for the buttons and instructions. Defaults to using system font. |
 | `colors` | `Colors`: Defines custom colors for the texts and background. Defaults to white text and black background. |
@@ -271,6 +272,20 @@ Because the host app knows its own input devices best, this is a plain toggle ra
 
 > :bangbang: The slider occupies the same toolbar slot as the interaction instructions. While `showsZoomSlider` is enabled, the instructions text is not shown and `texts.interactionInstructions` has no effect.
 
+## 🚪 Dismissal
+
+By default the cropping view dismisses itself once the save or cancel button was tapped, right after `onComplete` / `onCancel` were called. If the presenting view needs to control the dismissal, set `dismissesOnCompletion` to `false` and perform the dismissal yourself.
+
+```swift
+let configuration = SwiftyCropConfiguration(
+    dismissesOnCompletion: false
+)
+```
+
+This is useful when the cropped image is processed before the UI moves on, for example when uploading it: the cropping view stays on screen until the upload succeeded, so a failed upload can show an error instead of losing the crop.
+
+> :bangbang: With `dismissesOnCompletion` set to `false`, SwiftyCrop never dismisses itself. The presenting view is responsible for dismissing it in `onComplete` and `onCancel`, otherwise the cropping view stays on screen.
+
 ## 🪟 iOS 26 & Liquid Glass
 
 To adopt the new Liquid Glass design Apple introduced with iOS 26, SwiftyCrop renders a UI that reflects this design (the screenshots above). This replaces text buttons with icon buttons and much more. It is applied automatically whenever iOS 26, visionOS 26 or macOS 26 is available; older OS versions fall back to the classic UI shown below. There is no toggle for it.
@@ -313,7 +328,7 @@ Thanks to [@andrewhanshaw](https://github.com/andrewhanshaw) for adding the aspe
 
 Another thanks to [@andrewhanshaw](https://github.com/andrewhanshaw) for overhauling the cropping UI with a native SwiftUI toolbar, native macOS window support and a unified Liquid Glass design 🛠️
 
-Thanks to [@ezathashim](https://github.com/ezathashim) for adding the zoom slider for input devices without pinch-to-zoom 🔍
+Thanks to [@ezathashim](https://github.com/ezathashim) for adding the zoom slider for input devices without pinch-to-zoom and for making the dismissal optional 🔍
 
 ## 📃 License
 
