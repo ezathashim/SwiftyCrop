@@ -56,6 +56,7 @@ The localization file can be found in `Sources/SwiftyCrop/Resources`.
 - [Demo App](#-demo-app)
 - [Usage](#-usage)
 - [Aspect Ratio Resizing](#-aspect-ratio-resizing)
+- [Zoom Slider](#-zoom-slider)
 - [iOS 26 & Liquid Glass](#-ios-26--liquid-glass)
 - [Contributors](#-contributors)
 - [License](#-license)
@@ -176,11 +177,13 @@ You can also configure `SwiftyCropView` by passing a `SwiftyCropConfiguration`. 
 | `cropImageCircular` | `Bool`: When using the cropping mask `circle`, whether the resulting image should also be masked as circle. Defaults to `false`. |
 | `rotateImage` | `Bool`: Whether the image can be rotated when cropping using pinch gestures. Defaults to `false`. |
 | `rotateImageWithButtons` | `Bool`: Option to show rotation buttons for rotating. Defaults to `false`. |
+| `showsZoomSlider` | `Bool`: Whether a zoom slider is shown for input devices that cannot pinch-to-zoom. Replaces the interaction instructions text while shown. Defaults to `false`. |
 | `zoomSensitivity` | `CGFloat`: Zoom sensitivity when cropping. Increase to make zoom faster / less sensitive. Defaults to `1.0`. |
 | `rectAspectRatio` | `CGFloat`: The aspect ratio to use when a rectangular mask shape is used. Defaults to `4:3`. |
 | `allowAspectRatioResizing` | `Bool`: When using the `rectangle` mask shape, whether the user can freely resize the aspect ratio by dragging the edge handles. Defaults to `false`. |
 | `minAspectRatio` | `CGFloat`: The minimum allowed aspect ratio (width / height) when `allowAspectRatioResizing` is enabled. Defaults to `0.1`. |
 | `maxAspectRatio` | `CGFloat`: The maximum allowed aspect ratio (width / height) when `allowAspectRatioResizing` is enabled. Defaults to `10.0`. |
+| `dismissesOnCompletion` | `Bool`: Whether the cropping view dismisses itself after the save or cancel button was tapped. Set to `false` if the presenting view handles the dismissal itself. Defaults to `true`. |
 | `texts` | `Texts`: Defines custom texts for the buttons and instructions. Defaults to using localized strings from resources. |
 | `fonts` | `Fonts`: Defines custom fonts for the buttons and instructions. Defaults to using system font. |
 | `colors` | `Colors`: Defines custom colors for the texts and background. Defaults to white text and black background. |
@@ -193,12 +196,14 @@ let configuration = SwiftyCropConfiguration(
     cropImageCircular: false,
     rotateImage: false,
     rotateImageWithButtons: false,
+    showsZoomSlider: false,
     zoomSensitivity: 1.0,
     rectAspectRatio: 4/3,
     texts: SwiftyCropConfiguration.Texts(
         cancelButton: "Cancel",
         interactionInstructions: "Custom instruction text",
-        saveButton: "Save"
+        saveButton: "Save",
+        zoomSliderLabel: "Zoom"
     ),
     fonts: SwiftyCropConfiguration.Fonts(
         cancelButton: Font.system(size: 12),
@@ -209,7 +214,8 @@ let configuration = SwiftyCropConfiguration(
         cancelButton: Color.red,
         interactionInstructions: Color.white,
         saveButton: Color.blue,
-        background: Color.gray
+        background: Color.gray,
+        zoomSlider: Color.white
     )
 )
 ```
@@ -245,6 +251,40 @@ let configuration = SwiftyCropConfiguration(
 <p align="center">
     <img src="Assets/aspect_crop.png" style="margin: auto; width: 250px"/>
 </p>
+
+## 🔍 Zoom Slider
+
+Zooming is normally done with a pinch gesture. That gesture is not available on every input device — a mouse on macOS or Catalyst cannot perform it, and neither can VoiceOver, Switch Control or Full Keyboard Access. Enable `showsZoomSlider` to additionally offer a slider, which drives the exact same scale as the pinch gesture.
+
+```swift
+let configuration = SwiftyCropConfiguration(
+    showsZoomSlider: true,
+    texts: SwiftyCropConfiguration.Texts(
+        zoomSliderLabel: "Zoom" // Accessibility label, defaults to the localized value
+    ),
+    colors: SwiftyCropConfiguration.Colors(
+        zoomSlider: Color.white
+    )
+)
+```
+
+Because the host app knows its own input devices best, this is a plain toggle rather than an automatic platform check — there is no reliable API to detect whether a trackpad is present.
+
+> :bangbang: The slider occupies the same toolbar slot as the interaction instructions. While `showsZoomSlider` is enabled, the instructions text is not shown and `texts.interactionInstructions` has no effect.
+
+## 🚪 Dismissal
+
+By default the cropping view dismisses itself once the save or cancel button was tapped, right after `onComplete` / `onCancel` were called. If the presenting view needs to control the dismissal, set `dismissesOnCompletion` to `false` and perform the dismissal yourself.
+
+```swift
+let configuration = SwiftyCropConfiguration(
+    dismissesOnCompletion: false
+)
+```
+
+This is useful when the cropped image is processed before the UI moves on, for example when uploading it: the cropping view stays on screen until the upload succeeded, so a failed upload can show an error instead of losing the crop.
+
+> :bangbang: With `dismissesOnCompletion` set to `false`, SwiftyCrop never dismisses itself. The presenting view is responsible for dismissing it in `onComplete` and `onCancel`, otherwise the cropping view stays on screen.
 
 ## 🪟 iOS 26 & Liquid Glass
 
@@ -287,6 +327,8 @@ Thanks to [@navanchauhan](https://github.com/navanchauhan) for adding native mac
 Thanks to [@andrewhanshaw](https://github.com/andrewhanshaw) for adding the aspect ratio resizing functionality 🎉
 
 Another thanks to [@andrewhanshaw](https://github.com/andrewhanshaw) for overhauling the cropping UI with a native SwiftUI toolbar, native macOS window support and a unified Liquid Glass design 🛠️
+
+Thanks to [@ezathashim](https://github.com/ezathashim) for adding the zoom slider for input devices without pinch-to-zoom and for making the dismissal optional 🔍
 
 ## 📃 License
 

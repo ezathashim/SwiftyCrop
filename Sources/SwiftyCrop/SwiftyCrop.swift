@@ -19,18 +19,18 @@ import AppKit
 public struct SwiftyCropView: View {
     private let maskShape: MaskShape
     private let configuration: SwiftyCropConfiguration
-    private let onCancel: (() -> Void)?
+    private let onCancel: (@MainActor () -> Void)?
 
     #if canImport(UIKit)
     private let imageToCrop: UIImage
-    private let onComplete: (UIImage?) -> Void
+    private let onComplete: @MainActor (UIImage?) -> Void
 
     public init(
         imageToCrop: UIImage,
         maskShape: MaskShape,
         configuration: SwiftyCropConfiguration = SwiftyCropConfiguration(),
-        onCancel: (() -> Void)? = nil,
-        onComplete: @escaping (UIImage?) -> Void
+        onCancel: (@MainActor () -> Void)? = nil,
+        onComplete: @escaping @MainActor (UIImage?) -> Void
     ) {
         self.imageToCrop = imageToCrop
         self.maskShape = maskShape
@@ -40,14 +40,14 @@ public struct SwiftyCropView: View {
     }
     #elseif canImport(AppKit)
     private let imageToCrop: NSImage
-    private let onComplete: (NSImage?) -> Void
+    private let onComplete: @MainActor (NSImage?) -> Void
 
     public init(
         imageToCrop: NSImage,
         maskShape: MaskShape,
         configuration: SwiftyCropConfiguration = SwiftyCropConfiguration(),
-        onCancel: (() -> Void)? = nil,
-        onComplete: @escaping (NSImage?) -> Void
+        onCancel: (@MainActor () -> Void)? = nil,
+        onComplete: @escaping @MainActor (NSImage?) -> Void
     ) {
         self.imageToCrop = imageToCrop
         self.maskShape = maskShape

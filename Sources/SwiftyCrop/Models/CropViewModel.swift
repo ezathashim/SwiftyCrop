@@ -19,7 +19,7 @@ class CropViewModel: ObservableObject {
     private let minAspectRatio: CGFloat // The minimum allowed aspect ratio when resizing a rectangle mask.
     private let maxAspectRatio: CGFloat // The maximum allowed aspect ratio when resizing a rectangle mask.
     
-    var imageSizeInView: CGSize = .zero // The size of the image as displayed in the view.
+    @Published var imageSizeInView: CGSize = .zero // The size of the image as displayed in the view.
     @Published var maskSize: CGSize = .zero // The size of the mask used for cropping. This is updated based on the mask shape and available space.
     @Published var scale: CGFloat = 1.0 // The current scale factor of the image.
     @Published var lastScale: CGFloat = 1.0 // The previous scale factor of the image.
@@ -89,6 +89,7 @@ class CropViewModel: ObservableObject {
         let clamped = min(max(desired, minH), maxH)
         maskSize = CGSize(width: maskSize.width, height: clamped)
         rectAspectRatio = maskSize.width / clamped
+        clampScaleToMask()
     }
 
     /**
@@ -102,6 +103,20 @@ class CropViewModel: ObservableObject {
         let clamped = min(max(desired, minW), maxW)
         maskSize = CGSize(width: clamped, height: maskSize.height)
         rectAspectRatio = clamped / maskSize.height
+        clampScaleToMask()
+    }
+
+    /**
+     Clamps the current scale into the range that is valid for the current mask size.
+     Growing the mask raises the minimum scale, so the image has to catch up to keep filling the mask.
+     */
+    private func clampScaleToMask() {
+        guard imageSizeInView.width > 0, imageSizeInView.height > 0 else { return }
+        let maxScaleValues = calculateMagnificationGestureMaxValues()
+        let clamped = min(max(scale, maxScaleValues.0), maxScaleValues.1)
+        guard clamped != scale else { return }
+        scale = clamped
+        lastScale = clamped
     }
     
     /**

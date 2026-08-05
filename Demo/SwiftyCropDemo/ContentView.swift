@@ -16,12 +16,14 @@ struct ContentView: View {
   @State private var cropImageCircular: Bool
   @State private var rotateImage: Bool
   @State private var rotateImageWithButtons: Bool
+  @State private var showsZoomSlider: Bool
   @State private var maxMagnificationScale: CGFloat
   @State private var maskRadius: CGFloat
   @State private var zoomSensitivity: CGFloat
   @State private var allowAspectRatioResizing: Bool
   @State private var minAspectRatio: CGFloat
   @State private var maxAspectRatio: CGFloat
+  @State private var dismissesOnCompletion: Bool
   @FocusState private var textFieldFocused: Bool
   @EnvironmentObject private var cropSession: CropSession
   #if os(macOS)
@@ -48,12 +50,14 @@ struct ContentView: View {
     _cropImageCircular = State(initialValue: defaultConfiguration.cropImageCircular)
     _rotateImage = State(initialValue: defaultConfiguration.rotateImage)
     _rotateImageWithButtons = State(initialValue: defaultConfiguration.rotateImageWithButtons)
+    _showsZoomSlider = State(initialValue: defaultConfiguration.showsZoomSlider)
     _maxMagnificationScale = State(initialValue: defaultConfiguration.maxMagnificationScale)
     _maskRadius = State(initialValue: defaultConfiguration.maskRadius)
     _zoomSensitivity = State(initialValue: defaultConfiguration.zoomSensitivity)
     _allowAspectRatioResizing = State(initialValue: defaultConfiguration.allowAspectRatioResizing)
     _minAspectRatio = State(initialValue: defaultConfiguration.minAspectRatio)
     _maxAspectRatio = State(initialValue: defaultConfiguration.maxAspectRatio)
+    _dismissesOnCompletion = State(initialValue: defaultConfiguration.dismissesOnCompletion)
   }
   
   var body: some View {
@@ -138,7 +142,11 @@ struct ContentView: View {
           Toggle("Rotate image (gestures)", isOn: $rotateImage)
           
           Toggle("Rotate image (buttons)", isOn: $rotateImageWithButtons)
-          
+
+          Toggle("Show zoom slider", isOn: $showsZoomSlider)
+
+          Toggle("Dismiss on completion", isOn: $dismissesOnCompletion)
+
           HStack {
             Text("Max magnification")
               .frame(maxWidth: .infinity, alignment: .leading)
@@ -238,10 +246,17 @@ struct ContentView: View {
         configuration: makeCropConfiguration(),
         onCancel: {
           print("Operation cancelled")
+          // With `dismissesOnCompletion` disabled, the presenting view dismisses the cropper itself
+          if !dismissesOnCompletion {
+            showImageCropper = false
+          }
         }
       ) { croppedImage in
         // Do something with the returned, cropped image
         self.selectedImage = croppedImage
+        if !dismissesOnCompletion {
+          showImageCropper = false
+        }
       }
     }
   }
@@ -253,11 +268,13 @@ struct ContentView: View {
       cropImageCircular: cropImageCircular,
       rotateImage: rotateImage,
       rotateImageWithButtons: rotateImageWithButtons,
+      showsZoomSlider: showsZoomSlider,
       zoomSensitivity: zoomSensitivity,
       rectAspectRatio: rectAspectRatio.getValue(),
       allowAspectRatioResizing: allowAspectRatioResizing,
       minAspectRatio: minAspectRatio,
       maxAspectRatio: maxAspectRatio,
+      dismissesOnCompletion: dismissesOnCompletion,
       colors: SwiftyCropConfiguration.Colors(
         cancelButton: Color.primary,
         interactionInstructions: Color.primary,

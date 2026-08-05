@@ -15,16 +15,16 @@ struct CropView: View {
   private let image: PlatformImage
   private let maskShape: MaskShape
   private let configuration: SwiftyCropConfiguration
-  private let onCancel: (() -> Void)?
-  private let onComplete: (PlatformImage?) -> Void
+  private let onCancel: (@MainActor () -> Void)?
+  private let onComplete: @MainActor (PlatformImage?) -> Void
   private let localizableTableName: String
 
   init(
     image: PlatformImage,
     maskShape: MaskShape,
     configuration: SwiftyCropConfiguration,
-    onCancel: (() -> Void)? = nil,
-    onComplete: @escaping (PlatformImage?) -> Void
+    onCancel: (@MainActor () -> Void)? = nil,
+    onComplete: @escaping @MainActor (PlatformImage?) -> Void
   ) {
     self.image = image
     self.maskShape = maskShape
@@ -183,12 +183,60 @@ struct CropView: View {
     .simultaneousGesture(configuration.rotateImage ? rotationGesture : nil)
   }
 
+  /// Slider to zoom the image without a pinch gesture, for input devices that cannot perform one
+  /// (mouse, VoiceOver, Switch Control, Full Keyboard Access).
+  private func zoomSlider(scaleRange: ClosedRange<CGFloat>) -> some View {
+    HStack(spacing: 8) {
+      Image(systemName: "minus.magnifyingglass")
+        .accessibilityHidden(true)
+
+      Slider(
+        value: Binding(
+          get: { min(max(viewModel.scale, scaleRange.lowerBound), scaleRange.upperBound) },
+          set: { setScale($0) }
+        ),
+        in: scaleRange
+      )
+      .frame(minWidth: 120, idealWidth: 160, maxWidth: 240)
+      .accessibilityLabel(zoomSliderLabel)
+
+      Image(systemName: "plus.magnifyingglass")
+        .accessibilityHidden(true)
+    }
+    .padding(.horizontal, 8)
+    .foregroundStyle(configuration.colors.zoomSlider)
+    .controlSize(.small)
+  }
+
+  /// The valid scale range, or `nil` before layout has measured the image.
+  private var scaleRange: ClosedRange<CGFloat>? {
+    guard viewModel.imageSizeInView.width > 0,
+          viewModel.imageSizeInView.height > 0 else { return nil }
+    let maxScaleValues = viewModel.calculateMagnificationGestureMaxValues()
+    guard maxScaleValues.0 < maxScaleValues.1 else { return nil }
+    return maxScaleValues.0...maxScaleValues.1
+  }
+
+  private func setScale(_ newScale: CGFloat) {
+    let maxScaleValues = viewModel.calculateMagnificationGestureMaxValues()
+    viewModel.scale = min(max(newScale, maxScaleValues.0), maxScaleValues.1)
+    viewModel.lastScale = viewModel.scale
+    updateOffset()
+  }
+
+  private var zoomSliderLabel: String {
+    configuration.texts.zoomSliderLabel ??
+      NSLocalizedString("zoom_slider_label", tableName: localizableTableName, bundle: .module, comment: "")
+  }
+
   @ToolbarContentBuilder
   private var toolbarView: some ToolbarContent {
     ToolbarItem(placement: .cancellationAction) {
       Button {
         onCancel?()
-        dismiss()
+        if configuration.dismissesOnCompletion {
+          dismiss()
+        }
       } label: {
         Label(
           configuration.texts.cancelButton ??
@@ -209,13 +257,18 @@ struct CropView: View {
       )
     }
     ToolbarItem(placement: .principal) {
-      Text(
-        configuration.texts.interactionInstructions ??
-          NSLocalizedString("interaction_instructions", tableName: localizableTableName, bundle: .module, comment: "")
-      )
-      .padding(.horizontal)
-      .font(configuration.fonts.interactionInstructions)
-      .foregroundStyle(configuration.colors.interactionInstructions)
+      // The zoom slider takes over this slot, so the interaction instructions are hidden while it is shown.
+      if configuration.showsZoomSlider, let scaleRange {
+        zoomSlider(scaleRange: scaleRange)
+      } else {
+        Text(
+          configuration.texts.interactionInstructions ??
+            NSLocalizedString("interaction_instructions", tableName: localizableTableName, bundle: .module, comment: "")
+        )
+        .padding(.horizontal)
+        .font(configuration.fonts.interactionInstructions)
+        .foregroundStyle(configuration.colors.interactionInstructions)
+      }
     }
     #if !os(visionOS)
     if #available(iOS 26, macOS 26, *) {
@@ -228,9 +281,11 @@ struct CropView: View {
           await MainActor.run { isCropping = true }
           let result = cropImage()
           await MainActor.run {
-            onComplete(result)
-            dismiss()
             isCropping = false
+            onComplete(result)
+            if configuration.dismissesOnCompletion {
+              dismiss()
+            }
           }
         }
       } label: {
@@ -377,7 +432,7 @@ struct RotationControlsView: ToolbarContent {
   @State private var showRotationPopover: Bool = false
 
   var body: some ToolbarContent {
-    #if os(iOS) || os(visionOS)
+    #if (os(iOS) && !targetEnvironment(macCatalyst)) || os(visionOS)
     ToolbarItem(placement: .navigation) {
       if #available(iOS 16.4, visionOS 1.0, *) {
         Button {

@@ -8,11 +8,13 @@ public struct SwiftyCropConfiguration {
   public let cropImageCircular: Bool
   public let rotateImage: Bool
   public let rotateImageWithButtons: Bool
+  public let showsZoomSlider: Bool
   public let zoomSensitivity: CGFloat
   public let rectAspectRatio: CGFloat
   public let allowAspectRatioResizing: Bool
   public let minAspectRatio: CGFloat
   public let maxAspectRatio: CGFloat
+  public let dismissesOnCompletion: Bool
   public let texts: Texts
   public let fonts: Fonts
   public let colors: Colors
@@ -22,27 +24,31 @@ public struct SwiftyCropConfiguration {
   ///
   /// - Parameters:
   ///   - cancelButton: The text for the cancel button. Defaults to `nil`, using localized values from the app.
-  ///   - interactionInstructions: The text for the interaction instructions. Defaults to `nil`, using localized values from the app.
+  ///   - interactionInstructions: The text for the interaction instructions. Defaults to `nil`, using localized values from the app. Has no effect while `showsZoomSlider` is enabled, as the slider replaces this text.
   ///   - saveButton: The text for the save button. Defaults to `nil`, using localized values from the app.
   ///   - progressLayerText: The text for the progress view indicating that cropping occurs. Defaults to `nil`, using localized values from the app.
+  ///   - zoomSliderLabel: The accessibility label for the zoom slider. Unlike the button texts this applies on 26+ as well, since it is never displayed on screen. Defaults to `nil`, using localized values from the app.
   public struct Texts {
     public init(
       // We cannot use the localized values here because module access is not given in init
       cancelButton: String? = nil,
       interactionInstructions: String? = nil,
       saveButton: String? = nil,
-      progressLayerText: String? = nil
+      progressLayerText: String? = nil,
+      zoomSliderLabel: String? = nil
     ) {
       self.cancelButton = cancelButton
       self.interactionInstructions = interactionInstructions
       self.saveButton = saveButton
       self.progressLayerText = progressLayerText
+      self.zoomSliderLabel = zoomSliderLabel
     }
     
     public let cancelButton: String?
     public let interactionInstructions: String?
     public let saveButton: String?
     public let progressLayerText: String?
+    public let zoomSliderLabel: String?
   }
   
   /// Creates a new instance of `Fonts` that are used in the cropping view texts.
@@ -83,6 +89,7 @@ public struct SwiftyCropConfiguration {
   ///   - saveButtonBackground: If Liquid Glass is enabled, will be the background color of the button. Otherwise has no effect. Defaults to `.yellow`.
   ///   - background: The background color of the entire cropping view. Defaults to `.black`.
   ///   - cropHandle: The color of the aspect ratio resize handles shown on rectangle masks (if allowAspectRatioResizing is enabled). Defaults to `.white`.
+  ///   - zoomSlider: The color of the zoom slider and its icons (if showsZoomSlider is enabled). Defaults to `.white`.
   public struct Colors {
     public init(
       cancelButton: Color = .white,
@@ -95,7 +102,8 @@ public struct SwiftyCropConfiguration {
       saveButton: Color = .white,
       saveButtonBackground: Color = .yellow,
       background: Color = .black,
-      cropHandle: Color = .white
+      cropHandle: Color = .white,
+      zoomSlider: Color = .white
     ) {
       self.cancelButton = cancelButton
       self.cancelButtonBackground = cancelButtonBackground
@@ -108,6 +116,7 @@ public struct SwiftyCropConfiguration {
       self.saveButtonBackground = saveButtonBackground
       self.background = background
       self.cropHandle = cropHandle
+      self.zoomSlider = zoomSlider
     }
     
     public let cancelButton: Color
@@ -121,6 +130,7 @@ public struct SwiftyCropConfiguration {
     public let saveButtonBackground: Color
     public let background: Color
     public let cropHandle: Color
+    public let zoomSlider: Color
   }
   
   /// Creates a new instance of `SwiftyCropConfiguration`.
@@ -136,6 +146,11 @@ public struct SwiftyCropConfiguration {
   ///
   ///   - rotateImageWithButtons: Option to show rotation buttons. Defaults to `false`.
   ///
+  ///   - showsZoomSlider: Option to show a zoom slider, useful for input devices that cannot pinch-to-zoom
+  ///   (mouse, VoiceOver, Switch Control, Full Keyboard Access). Defaults to `false`.
+  ///   - Important: The slider occupies the same toolbar slot as the interaction instructions. While it is shown,
+  ///   the instructions text is not displayed and `texts.interactionInstructions` has no effect.
+  ///
   ///   - zoomSensitivity: Sensitivity when zooming. Default is `1.0`. Decrease to increase sensitivity.
   ///
   ///   - rectAspectRatio: The aspect ratio to use when a `.rectangle` mask shape is used. Defaults to `4:3`.
@@ -145,6 +160,9 @@ public struct SwiftyCropConfiguration {
   ///   - minAspectRatio: The minimum allowed aspect ratio (width/height) when resizing a rectangle mask. Defaults to `0.1`.
   ///
   ///   - maxAspectRatio: The maximum allowed aspect ratio (width/height) when resizing a rectangle mask. Defaults to `10.0`.
+  ///
+  ///   - dismissesOnCompletion: Whether the cropping view dismisses itself after the save or cancel button was tapped.
+  ///   Set this to `false` if the presenting view handles the dismissal itself. Defaults to `true`.
   ///
   ///   - texts: `Texts` object when using custom texts for the cropping view.
   ///
@@ -157,11 +175,13 @@ public struct SwiftyCropConfiguration {
     cropImageCircular: Bool = false,
     rotateImage: Bool = false,
     rotateImageWithButtons: Bool = false,
+    showsZoomSlider: Bool = false,
     zoomSensitivity: CGFloat = 1,
     rectAspectRatio: CGFloat = 4/3,
     allowAspectRatioResizing: Bool = false,
     minAspectRatio: CGFloat = 0.1,
     maxAspectRatio: CGFloat = 10.0,
+    dismissesOnCompletion: Bool = true,
     texts: Texts = Texts(),
     fonts: Fonts = Fonts(),
     colors: Colors = Colors()
@@ -171,11 +191,13 @@ public struct SwiftyCropConfiguration {
     self.cropImageCircular = cropImageCircular
     self.rotateImage = rotateImage
     self.rotateImageWithButtons = rotateImageWithButtons
+    self.showsZoomSlider = showsZoomSlider
     self.zoomSensitivity = zoomSensitivity
     self.rectAspectRatio = rectAspectRatio
     self.allowAspectRatioResizing = allowAspectRatioResizing
     self.minAspectRatio = minAspectRatio
     self.maxAspectRatio = maxAspectRatio
+    self.dismissesOnCompletion = dismissesOnCompletion
     self.texts = texts
     self.fonts = fonts
     self.colors = colors

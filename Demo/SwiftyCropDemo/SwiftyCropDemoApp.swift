@@ -37,6 +37,7 @@ struct SwiftyCropDemoApp: App {
 #if os(macOS)
 struct CropWindowView: View {
   @EnvironmentObject private var session: CropSession
+  @Environment(\.dismiss) private var dismiss
 
   var body: some View {
     if let image = session.image {
@@ -46,11 +47,19 @@ struct CropWindowView: View {
         configuration: session.configuration,
         onCancel: {
           session.onCancel?()
+          closeWindowIfNeeded()
         }
       ) { croppedImage in
         session.onComplete?(croppedImage)
+        closeWindowIfNeeded()
       }
     }
+  }
+
+  /// With `dismissesOnCompletion` disabled, the crop window is closed by the demo app instead of by SwiftyCrop.
+  private func closeWindowIfNeeded() {
+    guard !session.configuration.dismissesOnCompletion else { return }
+    dismiss()
   }
 }
 #endif
